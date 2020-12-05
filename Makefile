@@ -1,6 +1,6 @@
 CXXFLAGS=-O3 -std=c++17
 CUDAFLAGS=
-LIBS= -lglfw -lGL -lGLEW
+LIBS=-lglfw -lGL -lGLEW
 LIBDIRS=
 INCDIRS=
 all: 
