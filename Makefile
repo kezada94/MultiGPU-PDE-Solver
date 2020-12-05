@@ -1,7 +1,7 @@
-CXXFLAGS=-O3 -std=c++11
-CUDAFLAGS=-arch=sm_75
+CXXFLAGS=-O3 -std=c++17
+CUDAFLAGS=
 LIBS= -lglfw -lGL -lGLEW
 LIBDIRS=
 INCDIRS=
 all: 
-	nvcc -o laplace *.cu $(LIBDIRS) $(INCDIRS) $(LIBS) $(CUDAFLAGS) $(CXXFLAGS)
+	g++ -o pde *.cpp $(LIBDIRS) $(INCDIRS) $(LIBS) $(CUDAFLAGS) $(CXXFLAGS)
