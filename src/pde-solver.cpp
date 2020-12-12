@@ -104,9 +104,23 @@ int main(int argc, char *argv[]){
                 }
             }
 	}
+
+        //Dirichlet
+        for (size_t m=0; m<M; ++m){
+        }
+
+        for (size_t n=0; n<N; ++n){
+        }
+
+        for (size_t o=0; o<O; ++o){
+            INDEX4D(a->data, l, m, n, o, M, N, O) = a->axes[1][m];
+            INDEX4D(F->data, l, m, n, o, M, N, O) = q*(a->axes[2][n]);
+            INDEX4D(G->data, l, m, n, o, M, N, O) = p*(a->axes[0][l]/bigl - a->axes[3][o]);
+        }
 	//writeCheckpoint(outfile, a, F, G, l, M, N, O, l);
     }
 
+    //Boundary filll
     for (size_t l=0; l<2; ++l){
         for (size_t m=0; m<M; ++m){
             for (size_t n=0; n<N; ++n){
