@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <boost/multi_array.hpp>
 #include "defines.h"
 #include "Linspace.h"
 
@@ -21,7 +22,8 @@ public:
 	~Grid();
 
 	//Direct acces or too slow
-	REAL* data;
+	//REAL* data;
+	array4D data;
 
 private:
 

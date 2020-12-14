@@ -5,7 +5,7 @@
 #include <fstream>
 #include <cmath>
 
-#include "update_equations.h"
+#include "Equation.h"
 #include "Grid.h"
 #include "Linspace.h"
 
@@ -24,23 +24,28 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    const int L = 500;// atoi(argv[1]);
-    const int M = 500;// atoi(argv[2]);
-    const int N = 500;// atoi(argv[3]);
-    const int O = 500;// atoi(argv[4]);
+    const size_t L = 10;// atoi(argv[1]);
+    const size_t M = 100;// atoi(argv[2]);
+    const size_t N = 100;// atoi(argv[3]);
+    const size_t O = 100;// atoi(argv[4]);
 
     int buffSize = atoi(argv[5]);
     if (buffSize < 3) buffSize = 3;
 
+	cout << "Generating lispaces..."; fflush(stdout);
     vector<linspace_definition> linspaces = vector<linspace_definition>();
-    linspaces.push_back(linspace_definition(0, 1, 500)); // for t
-    linspaces.push_back(linspace_definition(0, 2*PI, 500)); // for r
-    linspaces.push_back(linspace_definition(0, PI, 500)); // for theta
-    linspaces.push_back(linspace_definition(0, 2*PI, 500)); // for phi
+    linspaces.push_back(linspace_definition(0, 1, L)); // for t
+    linspaces.push_back(linspace_definition(0, 2*PI, M)); // for r
+    linspaces.push_back(linspace_definition(0, PI, N)); // for theta
+    linspaces.push_back(linspace_definition(0, 2*PI, O)); // for phi
+	cout << "done" << endl;
 
+// its better to separate fdm grid with continuous axes
+	cout << "Generating grids..."; fflush(stdout);
     Grid *a = new Grid(linspaces);
     Grid *F = new Grid(linspaces);
     Grid *G = new Grid(linspaces);
+	cout << "done" << endl;
 /*
     vector<decimal> X = vector<decimal>(M);
     vector<decimal> Y = vector<decimal>(N);
@@ -77,17 +82,19 @@ int main(int argc, char *argv[]){
     string filename = "result-"+to_string(L)+"-"+to_string(M)+"-"+to_string(N)+"-"+to_string(O)+".dat";
     outfile.open(filename);
 
+	cout << "Filling first 2 states..."; fflush(stdout);
     for (size_t l=0; l<2; ++l){
         for (size_t m=0; m<M; ++m){
             for (size_t n=0; n<N; ++n){
                 for (size_t o=0; o<O; ++o){
-                    INDEX4D(a->data, l, m, n, o, M, N, O) = a->axes[1][m];
-                    INDEX4D(F->data, l, m, n, o, M, N, O) = q*(a->axes[2][n]);
-                    INDEX4D(G->data, l, m, n, o, M, N, O) = p*(a->axes[0][l]/bigl - a->axes[3][o]);
+                    a->data[l][m][n][o] = a->axes[1][m];
+                    F->data[l][m][n][o] = q*(a->axes[2][n]);
+                    G->data[l][m][n][o] = p*(a->axes[0][l]/bigl - a->axes[3][o]);
                 }
             }
         }
     }
+	cout << " done." << endl;
 
     REAL dt = a->deltas[0];
     REAL dr = a->deltas[1];
@@ -95,43 +102,43 @@ int main(int argc, char *argv[]){
     REAL dphi = a->deltas[3];
 
     for (size_t l=2; l<L; ++l){
-        for (size_t m=1; m<M; ++m){
-            for (size_t n=1; n<N; ++n){
-                for (size_t o=1; o<O; ++o){
-                    INDEX4D(a->data, l, m, n, o, M, N, O) = Update::computeNexta(a->data, F->data, G->data, l, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-                    INDEX4D(F->data, l, m, n, o, M, N, O) = Update::computeNextF(a->data, F->data, G->data, l, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-                    INDEX4D(G->data, l, m, n, o, M, N, O) = Update::computeNextG(a->data, F->data, G->data, l, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+		cout << "Performing iteration "<< l << endl;
+        for (size_t m=1; m<M-1; ++m){
+            for (size_t n=1; n<N-1; ++n){
+                for (size_t o=1; o<O-1; ++o){
+                    a->data[l][m][n][o] = Equation::computeNexta(a->data, F->data, G->data, l-1, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+                    F->data[l][m][n][o] = Equation::computeNextF(a->data, F->data, G->data, l-1, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+                    G->data[l][m][n][o] = Equation::computeNextG(a->data, F->data, G->data, l-1, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
                 }
             }
-	}
+		}
 
-        //Dirichlet
-        for (size_t m=0; m<M; ++m){
-        }
-
-        for (size_t n=0; n<N; ++n){
-        }
-
-        for (size_t o=0; o<O; ++o){
-            INDEX4D(a->data, l, m, n, o, M, N, O) = a->axes[1][m];
-            INDEX4D(F->data, l, m, n, o, M, N, O) = q*(a->axes[2][n]);
-            INDEX4D(G->data, l, m, n, o, M, N, O) = p*(a->axes[0][l]/bigl - a->axes[3][o]);
-        }
-	//writeCheckpoint(outfile, a, F, G, l, M, N, O, l);
-    }
-
-    //Boundary filll
-    for (size_t l=0; l<2; ++l){
         for (size_t m=0; m<M; ++m){
             for (size_t n=0; n<N; ++n){
                 for (size_t o=0; o<O; ++o){
-                    INDEX4D(a->data, l, m, n, o, M, N, O) = a->axes[1][m];
-                    INDEX4D(F->data, l, m, n, o, M, N, O) = q*(a->axes[2][n]);
-                    INDEX4D(G->data, l, m, n, o, M, N, O) = p*(a->axes[0][l]/bigl - a->axes[3][o]);
+					if (m == 0 || m == M-1){
+						a->data[l][m][n][o] = a->axes[1][m];
+						F->data[l][m][n][o] = q*(a->axes[2][n]);
+						G->data[l][m][n][o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
+					}
+					if (n == 0 || n == N-1){
+						a->data[l][m][n][o] = a->axes[1][m];
+						F->data[l][m][n][o] = q*(a->axes[2][n]);
+						G->data[l][m][n][o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
+					}
+					if (o == 0 || o == O-1){
+						a->data[l][m][n][o] = a->axes[1][m];
+						F->data[l][m][n][o] = q*(a->axes[2][n]);
+						G->data[l][m][n][o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
+					}
                 }
             }
-        }
+		}
+	//writeCheckpoint(outfile, a, F, G, l, M, N, O, l);
     }
+
+	
+    //Boundary filll
     outfile.close();
     return 0;
 }

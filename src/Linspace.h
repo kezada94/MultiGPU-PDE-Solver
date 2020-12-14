@@ -3,10 +3,10 @@
 #include "defines.h"
 
 typedef struct linspace_definition{
-	linspace_definition(REAL start, REAL end, size_t n){
-		start = start;
-		end = end;
-		n = n;
+	linspace_definition(REAL s, REAL e, size_t nn){
+		start = s;
+		end = e;
+		n = nn;
 	}
 	REAL start;
 	REAL end;

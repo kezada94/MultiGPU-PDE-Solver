@@ -19,7 +19,9 @@ Grid::Grid(vector<linspace_definition> &parameters){
 	cout << "Generated grid of: ";
 	printVector(this->gridDimensions, "x");
 	cout << " = " << linearSize << " elements." << endl;
-	data = new REAL[linearSize];
+//TODO FIX /500*3, contemplate buffsize
+	
+	data = array4D(boost::extents[this->gridDimensions[0]][this->gridDimensions[1]][this->gridDimensions[2]][this->gridDimensions[3]]);
 }
 
 Grid::~Grid(){
