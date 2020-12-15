@@ -5,6 +5,7 @@ VERBOSE=no
 GCC_FLAGS=-O3 -std=c++17 -fopenmp
 LIBS=-pthread -fopenmp
 DEFINES=
+INCLUDES=-I./vendor/eigen-3.3.9
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)
 
 OBJ_FILES=$(addprefix $(OBJ_DIR)/,$(notdir $(CPP_FILES:.cpp=.o)))

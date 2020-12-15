@@ -4,16 +4,32 @@
 #include <string>
 #include <fstream>
 #include <cmath>
+#include <omp.h>
+#include <Eigen/Dense>
+ 
+using namespace Eigen;
 
 #include "Equation.h"
 #include "Grid.h"
 #include "Linspace.h"
 
+
 using namespace std;
 
 const REAL PI = 3.14159265358979323846f;
+const REAL E = 2.71828;
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
+Matrix2d getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
+Matrix2d getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
+Matrix2d getL_0(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
+Matrix2d getL_1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
+Matrix2d getL_2(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
+Matrix2d getL_3(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
+
+void writeTimeSnapshot(ofstream &file, REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
+
 
 int main(int argc, char *argv[]){
 
@@ -71,7 +87,8 @@ int main(int argc, char *argv[]){
 */
     int p = 1;
     int q = 1;
-    REAL bigl = 1.f;
+    REAL bigl = 4.0/6.0*(1.0/5.45*129.0)*50.9;
+    //REAL bigl = 4.0/6.0*(1.0/E*186.0)*50.9;
 
     REAL l_1 = 1.f;
     REAL l_2 = 1.f;
@@ -98,14 +115,18 @@ int main(int argc, char *argv[]){
     REAL dr = a->deltas[1];
     REAL dtheta = a->deltas[2];
     REAL dphi = a->deltas[3];
+	    writeTimeSnapshot(outfile, a->data, F->data, G->data, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+        cout << "Written" << endl;
+        getchar();
 
+    omp_set_num_threads(10);
     for (size_t l=2; l<L; ++l){
 		cout << "Performing iteration "<< l << endl;
+        #pragma omp parallel for
         for (size_t m=1; m<M-1; ++m){
             cout << "r= "<< m << endl;
             for (size_t n=1; n<N-1; ++n){
             cout << "theta= "<< n << endl;
-
                 for (size_t o=1; o<O-1; ++o){
 
                     a->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = Equation::computeNexta(a->data, F->data, G->data, l-1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
@@ -136,7 +157,8 @@ int main(int argc, char *argv[]){
                 }
             }
 		}
-	//writeCheckpoint(outfile, a, F, G, l, M, N, O, l);
+	    writeTimeSnapshot(outfile, a->data, F->data, G->data, l, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+        getchar();
     }
 
 	
@@ -145,6 +167,78 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
+static Matrix2d i2x2 = [] { 
+    Matrix2d matrix;
+    matrix << 1, 0, 0, 1;
+    return matrix;
+}();
+static Matrix2d t1 = [] { 
+    Matrix2d matrix;
+    matrix << 0, 1, 1, 0;
+    return matrix;
+}();
+static Matrix2d t2 = [] { 
+    Matrix2d matrix;
+    matrix << 0, -1, 1, 0;
+    return matrix;
+}();
+static Matrix2d t3 = [] { 
+    Matrix2d matrix;
+    matrix << 0, 1, -1, 0;
+    return matrix;
+}();
+Matrix2d getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
+    REAL anow = a[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
+    REAL Fnow = F[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
+    REAL Gnow = G[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
+    REAL n1 = sin(Fnow)*cos(Gnow); 
+    REAL n2 = sin(Fnow)*sin(Gnow); 
+    REAL n3 = cos(Fnow); 
+    Matrix2d U = cos(anow)*i2x2 + sin(anow)*(t1*n1+t2*n2+t3*n3);
+    return U;
+}
+Matrix2d getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
+    REAL anow = a[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
+    REAL Fnow = F[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
+    REAL Gnow = G[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
+    REAL n1 = sin(Fnow)*cos(Gnow); 
+    REAL n2 = sin(Fnow)*sin(Gnow); 
+    REAL n3 = cos(Fnow); 
+    Matrix2d Um1 = cos(anow)*i2x2 - sin(anow)*(t1*n1+t2*n2+t3*n3);
+    return Um1;
+}
+
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
+    Matrix2d Um1 = getUm1(a, F, G, t, r, theta, phi, M, N, O);
+    Matrix2d L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t-1, r, theta, phi, M, N, O))/dt); 
+    Matrix2d L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/dr); 
+    Matrix2d L_2 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/dtheta);
+    Matrix2d L_3 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/dphi); 
+
+    REAL K = 13.5;
+    REAL t00 = -K/2.0f*(L_0*L_0 - 1.0/2.0*-1*(L_0*L_0 + L_1*L_1 + L_2*L_2 + L_3*L_3) 
+                        + bigl/4.0*((-1.0*(L_0*L_0 - L_0*L_0)*(L_0*L_0 - L_0*L_0) 
+                                    +l_1*(L_0*L_1 - L_1*L_0)*(L_0*L_1 - L_1*L_0) 
+                                    +l_1*(L_0*L_2 - L_2*L_0)*(L_0*L_2 - L_2*L_0)
+                                    +l_2*(L_0*L_3 - L_3*L_0)*(L_0*L_3 - L_3*L_0))
+                                - -1.0/4.0*((L_0*L_0 - L_0*L_0)*(L_0*L_0 - L_0*L_0) 
+                                           +(L_1*L_1 - L_1*L_1)*(L_1*L_1 - L_1*L_1) 
+                                           +(L_2*L_2 - L_2*L_2)*(L_2*L_2 - L_2*L_2) 
+                                           +(L_3*L_3 - L_3*L_3)*(L_3*L_3 - L_3*L_3)) )).trace();
+    return t00;
+
+
+}
+void writeTimeSnapshot(ofstream &file, REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
+    for (size_t m=0; m<M; ++m){
+        for (size_t n=0; n<N; ++n){
+            for (size_t o=0; o<O; ++o){
+                file << getT00(a, F, G, t, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl) << ",";
+            }
+        }
+    }
+
+}
 /*
 void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l){
     for (size_t m=0; m<M; ++m){
