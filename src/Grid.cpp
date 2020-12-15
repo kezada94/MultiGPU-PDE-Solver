@@ -21,7 +21,8 @@ Grid::Grid(vector<linspace_definition> &parameters){
 	cout << " = " << linearSize << " elements." << endl;
 //TODO FIX /500*3, contemplate buffsize
 	
-	data = array4D(boost::extents[this->gridDimensions[0]][this->gridDimensions[1]][this->gridDimensions[2]][this->gridDimensions[3]]);
+	data = new REAL[linearSize];
+	//new array4D(boost::extents[this->gridDimensions[0]][this->gridDimensions[1]][this->gridDimensions[2]][this->gridDimensions[3]]);
 }
 
 Grid::~Grid(){

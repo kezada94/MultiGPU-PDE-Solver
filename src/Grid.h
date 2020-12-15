@@ -22,9 +22,8 @@ public:
 	~Grid();
 
 	//Direct acces or too slow
-	//REAL* data;
-	array4D data;
-
+	REAL* data;
+	//REAL (*data)[_M][_N][_O];
 private:
 
 	vector<REAL> genLinspace(REAL start, REAL end, size_t n);

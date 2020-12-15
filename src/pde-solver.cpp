@@ -10,10 +10,8 @@
 #include "Linspace.h"
 
 using namespace std;
-typedef float decimal;
 
-
-const decimal PI = 3.14159265358979323846f;
+const REAL PI = 3.14159265358979323846f;
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
 
@@ -24,10 +22,10 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    const size_t L = 10;// atoi(argv[1]);
-    const size_t M = 100;// atoi(argv[2]);
-    const size_t N = 100;// atoi(argv[3]);
-    const size_t O = 100;// atoi(argv[4]);
+    const size_t L = atoi(argv[1]);
+    const size_t M = atoi(argv[2]);
+    const size_t N = atoi(argv[3]);
+    const size_t O = atoi(argv[4]);
 
     int buffSize = atoi(argv[5]);
     if (buffSize < 3) buffSize = 3;
@@ -87,9 +85,9 @@ int main(int argc, char *argv[]){
         for (size_t m=0; m<M; ++m){
             for (size_t n=0; n<N; ++n){
                 for (size_t o=0; o<O; ++o){
-                    a->data[l][m][n][o] = a->axes[1][m];
-                    F->data[l][m][n][o] = q*(a->axes[2][n]);
-                    G->data[l][m][n][o] = p*(a->axes[0][l]/bigl - a->axes[3][o]);
+                    a->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = a->axes[1][m];
+                    F->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = q*(a->axes[2][n]);
+                    G->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*(a->axes[0][l]/bigl - a->axes[3][o]);
                 }
             }
         }
@@ -104,11 +102,15 @@ int main(int argc, char *argv[]){
     for (size_t l=2; l<L; ++l){
 		cout << "Performing iteration "<< l << endl;
         for (size_t m=1; m<M-1; ++m){
+            cout << "r= "<< m << endl;
             for (size_t n=1; n<N-1; ++n){
+            cout << "theta= "<< n << endl;
+
                 for (size_t o=1; o<O-1; ++o){
-                    a->data[l][m][n][o] = Equation::computeNexta(a->data, F->data, G->data, l-1, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-                    F->data[l][m][n][o] = Equation::computeNextF(a->data, F->data, G->data, l-1, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-                    G->data[l][m][n][o] = Equation::computeNextG(a->data, F->data, G->data, l-1, m, n, o, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+
+                    a->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = Equation::computeNexta(a->data, F->data, G->data, l-1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+                    F->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = Equation::computeNextF(a->data, F->data, G->data, l-1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+                    G->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = Equation::computeNextG(a->data, F->data, G->data, l-1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
                 }
             }
 		}
@@ -117,19 +119,19 @@ int main(int argc, char *argv[]){
             for (size_t n=0; n<N; ++n){
                 for (size_t o=0; o<O; ++o){
 					if (m == 0 || m == M-1){
-						a->data[l][m][n][o] = a->axes[1][m];
-						F->data[l][m][n][o] = q*(a->axes[2][n]);
-						G->data[l][m][n][o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
+						a->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = a->axes[1][m];
+						F->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = q*(a->axes[2][n]);
+						G->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
 					}
 					if (n == 0 || n == N-1){
-						a->data[l][m][n][o] = a->axes[1][m];
-						F->data[l][m][n][o] = q*(a->axes[2][n]);
-						G->data[l][m][n][o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
+						a->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = a->axes[1][m];
+						F->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = q*(a->axes[2][n]);
+						G->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
 					}
 					if (o == 0 || o == O-1){
-						a->data[l][m][n][o] = a->axes[1][m];
-						F->data[l][m][n][o] = q*(a->axes[2][n]);
-						G->data[l][m][n][o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
+						a->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = a->axes[1][m];
+						F->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = q*(a->axes[2][n]);
+						G->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*(a->axes[0][l-1]/bigl - a->axes[3][o]);
 					}
                 }
             }

@@ -2,7 +2,7 @@ TARGET=pde
 SRC_DIR=src
 OBJ_DIR=obj
 VERBOSE=no
-GCC_FLAGS=-O3 -std=c++17 -fopenmp -Wall
+GCC_FLAGS=-O3 -std=c++17 -fopenmp
 LIBS=-pthread -fopenmp
 DEFINES=
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)

@@ -11,10 +11,10 @@ using namespace std;
 
 class Equation{
 public:
-	static REAL computeNexta(array4D &a, array4D &F, array4D &G, size_t t, size_t r, size_t theta, size_t phi, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
+	static REAL computeNexta(REAL *a, REAL *F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
 
-	static REAL computeNextF(array4D &a, array4D &F, array4D &G, size_t t, size_t r, size_t theta, size_t phi, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
+	static REAL computeNextF(REAL *a, REAL *F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
 
-	static REAL computeNextG(array4D &a, array4D &F, array4D &G, size_t t, size_t r, size_t theta, size_t phi, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
+	static REAL computeNextG(REAL *a, REAL *F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
 };
 
