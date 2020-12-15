@@ -28,7 +28,7 @@ Matrix2d getL_1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, siz
 Matrix2d getL_2(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 Matrix2d getL_3(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 
-void writeTimeSnapshot(ofstream &file, REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
+void writeTimeSnapshot(FILE *file, REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
 
 
 int main(int argc, char *argv[]){
@@ -93,9 +93,9 @@ int main(int argc, char *argv[]){
     REAL l_1 = 1.f;
     REAL l_2 = 1.f;
 
-    ofstream outfile;
+    FILE* outfile;
     string filename = "result-"+to_string(L)+"-"+to_string(M)+"-"+to_string(N)+"-"+to_string(O)+".dat";
-    outfile.open(filename);
+    outfile = fopen(filename.c_str(), "w");
 
 	cout << "Filling first 2 states..."; fflush(stdout);
     for (size_t l=0; l<2; ++l){
@@ -115,11 +115,12 @@ int main(int argc, char *argv[]){
     REAL dr = a->deltas[1];
     REAL dtheta = a->deltas[2];
     REAL dphi = a->deltas[3];
-	    writeTimeSnapshot(outfile, a->data, F->data, G->data, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-        cout << "Written" << endl;
-        getchar();
+	   
+    writeTimeSnapshot(outfile, a->data, F->data, G->data, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+    cout << "Written" << endl;
+    getchar();
 
-    omp_set_num_threads(10);
+    omp_set_num_threads(1);
     for (size_t l=2; l<L; ++l){
 		cout << "Performing iteration "<< l << endl;
         #pragma omp parallel for
@@ -163,7 +164,7 @@ int main(int argc, char *argv[]){
 
 	
     //Boundary filll
-    outfile.close();
+    fclose(outfile);
     return 0;
 }
 
@@ -221,19 +222,23 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t 
                                     +l_1*(L_0*L_1 - L_1*L_0)*(L_0*L_1 - L_1*L_0) 
                                     +l_1*(L_0*L_2 - L_2*L_0)*(L_0*L_2 - L_2*L_0)
                                     +l_2*(L_0*L_3 - L_3*L_0)*(L_0*L_3 - L_3*L_0))
-                                - -1.0/4.0*((L_0*L_0 - L_0*L_0)*(L_0*L_0 - L_0*L_0) 
-                                           +(L_1*L_1 - L_1*L_1)*(L_1*L_1 - L_1*L_1) 
-                                           +(L_2*L_2 - L_2*L_2)*(L_2*L_2 - L_2*L_2) 
-                                           +(L_3*L_3 - L_3*L_3)*(L_3*L_3 - L_3*L_3)) )).trace();
+                                                                          
+                                           
+                                            )).trace();
     return t00;
 
 
 }
-void writeTimeSnapshot(ofstream &file, REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
-    for (size_t m=0; m<M; ++m){
-        for (size_t n=0; n<N; ++n){
-            for (size_t o=0; o<O; ++o){
-                file << getT00(a, F, G, t, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl) << ",";
+void writeTimeSnapshot(FILE* file, REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
+    int count = 0;
+    for (size_t m=0; m<M; m++){
+        for (size_t n=0; n<N; n++){
+            for (size_t o=0; o<O; o++){
+
+                //file << t << ", " << m << ", " << n << ", " << o << "\n";// <<getT00(a, F, G, t, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl) << "\n";
+                fprintf(file, "%f\n", getT00(a, F, G, t, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl));
+                count = count +1;
+                    cout << count << endl;
             }
         }
     }
