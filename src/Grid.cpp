@@ -1,6 +1,6 @@
 #include "Grid.h"
 
-Grid::Grid(vector<linspace_definition> &parameters){
+Grid::Grid(vector<linspace_definition> &parameters, REAL buffSize){
 	this->dimensions = parameters.size();
 	this->gridDimensions = vector<size_t>(dimensions);
 	this->axes = vector<vector<REAL>>(dimensions);
@@ -10,18 +10,22 @@ Grid::Grid(vector<linspace_definition> &parameters){
 	for(uint8_t i=0; i<parameters.size(); ++i){
 		linspace_definition d = parameters[i];
 		linearSize *= d.n;
+		cout << d.n << endl;
 		//TODO has to be over 2 - end after start, non negative
 		this->gridDimensions[i] = d.n;
 		this->deltas[i] = (d.end - d.start)/(d.n-1);
 		this->axes[i] = genLinspace(d.start, this->deltas[i], d.n);
 	}
-
-	cout << "Generated grid of: ";
+	linearSize *= buffSize;
+	cout << "Generated grid of: " <<buffSize << "x";
 	printVector(this->gridDimensions, "x");
 	cout << " = " << linearSize << " elements." << endl;
 //TODO FIX /500*3, contemplate buffsize
 	
 	data = new REAL[linearSize];
+	for (size_t i=0; i<linearSize; i++){
+		data[i] = 0.0;
+	}
 	//new array4D(boost::extents[this->gridDimensions[0]][this->gridDimensions[1]][this->gridDimensions[2]][this->gridDimensions[3]]);
 }
 

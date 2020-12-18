@@ -18,7 +18,7 @@ public:
 	vector<REAL> deltas;
 	// parameters : Map with <dimension index, starting value, end value, number
 	// of datapoints>
-	Grid(vector<linspace_definition> &parameters);
+	Grid(vector<linspace_definition> &parameters, REAL buffSize);
 	~Grid();
 
 	//Direct acces or too slow
