@@ -16,23 +16,34 @@ Grid::Grid(vector<linspace_definition> &parameters, REAL buffSize){
 		this->deltas[i] = (d.end - d.start)/(d.n-1);
 		this->axes[i] = genLinspace(d.start, this->deltas[i], d.n);
 	}
-	linearSize *= buffSize;
 	cout << "Generated grid of: " <<buffSize << "x";
 	printVector(this->gridDimensions, "x");
 	cout << " = " << linearSize << " elements." << endl;
-//TODO FIX /500*3, contemplate buffsize
 	
-	data = new REAL[linearSize];
-	for (size_t i=0; i<linearSize; i++){
-		data[i] = 0.0;
-	}
-	//new array4D(boost::extents[this->gridDimensions[0]][this->gridDimensions[1]][this->gridDimensions[2]][this->gridDimensions[3]]);
+    data = vector<REAL*>(buffSize);
+    for (uint8_t i=0; i<buffSize; i++){
+        data[i] = new REAL[linearSize];
+        for (size_t j=0; j<linearSize; j++){
+            data[i][j] = 0.0;
+        }
+    }
+
 }
 
 Grid::~Grid(){
 
 }
 
+void Grid::stepCircularBuffer(){
+    size_t buffSize = this->data.size();
+    vector<REAL*> temp = vector<REAL*>(buffSize);
+
+    temp[0] = this->data[buffSize-1];
+    for (uint8_t i=1; i < buffSize; i++){
+        temp[i%buffSize] = this->data[(i-1)%buffSize];
+    }
+    this->data = temp;
+}
 //maybe define as 4Dgrid
 
 vector<REAL> Grid::genLinspace(REAL start, REAL delta, size_t n){

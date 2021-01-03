@@ -13,10 +13,3 @@ typedef struct linspace_definition{
 	size_t n;
 } linspace_definition;
 
-class Linspace{
-public:
-	Linspace(REAL start, REAL end, size_t size);
-	~Linspace();
-
-	REAL* d;
-};

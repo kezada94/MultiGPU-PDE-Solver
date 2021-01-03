@@ -20,6 +20,7 @@ public:
 	// of datapoints>
 	Grid(vector<linspace_definition> &parameters, REAL buffSize);
 	~Grid();
+    void stepCircularBuffer();
 
 	//Direct acces or too slow
 	REAL* data;
