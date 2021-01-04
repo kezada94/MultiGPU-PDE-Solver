@@ -20,13 +20,6 @@ Grid::Grid(vector<linspace_definition> &parameters, REAL buffSize){
 	printVector(this->gridDimensions, "x");
 	cout << " = " << linearSize << " elements." << endl;
 	
-    data = vector<REAL*>(buffSize);
-    for (uint8_t i=0; i<buffSize; i++){
-        data[i] = new REAL[linearSize];
-        for (size_t j=0; j<linearSize; j++){
-            data[i][j] = 0.0;
-        }
-    }
 
 }
 
@@ -35,14 +28,6 @@ Grid::~Grid(){
 }
 
 void Grid::stepCircularBuffer(){
-    size_t buffSize = this->data.size();
-    vector<REAL*> temp = vector<REAL*>(buffSize);
-
-    temp[0] = this->data[buffSize-1];
-    for (uint8_t i=1; i < buffSize; i++){
-        temp[i%buffSize] = this->data[(i-1)%buffSize];
-    }
-    this->data = temp;
 }
 //maybe define as 4Dgrid
 

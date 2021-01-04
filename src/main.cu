@@ -5,6 +5,7 @@
 #include <fstream>
 #include <cmath>
 #include <omp.h>
+#include <cuda_runtime.h>
 #include <Eigen/Dense>
  
 using namespace Eigen;
@@ -12,15 +13,14 @@ using namespace Eigen;
 #include "Equation.cuh"
 #include "Grid.h"
 #include "Linspace.h"
+#include "kernels.cuh"
 
 
 using namespace std;
 
 const REAL PI = 3.14159265358979323846f;
-const REAL E = 2.71828;
 const size_t buffSize = 4;
 
-const 
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
 REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
@@ -65,12 +65,13 @@ int main(int argc, char *argv[]){
     REAL dphi = ax_phi[1] - ax_phi[0];
 
 	size_t nelements = buffSize*M*N*O;
+	cout << "Number of elements: " << nelements << endl;
 
 // its better to separate fdm grid with continuous axes
 	cout << "Generating grids..."; fflush(stdout);
-    REAL *a = new int[nelements];
-    REAL *F = new int[nelements];
-    REAL *G = new int[nelements];
+    REAL *a = new REAL[2*M*N*O];
+    REAL *F = new REAL[2*M*N*O];
+    REAL *G = new REAL[2*M*N*O];
 	cout << "done" << endl;
 
     int p = 1;
@@ -83,27 +84,7 @@ int main(int argc, char *argv[]){
 
     string filename = "result-"+to_string(M)+"-"+to_string(N)+"-"+to_string(O)+".dat";
 
-	cout << "Filling first 3 states..."; fflush(stdout);
-    for (size_t l=0; l<3; ++l){
-        for (size_t m=0; m<M; ++m){
-            for (size_t n=0; n<N; ++n){
-                for (size_t o=0; o<O; ++o){
-                    a->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = ax_r[m];
-                    F->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = q*(ax_theta[n]);
-                    G->data[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*(REAL)l)/bigl - ax_phi[o]);
-                }
-            }
-        }
-    }
-	cout << " done." << endl;
-
-	   
-    writeTimeSnapshot(filename, a->data, F->data, G->data, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-    cout << "Written" << endl;
-    getchar();
-
-
-    REAL* a_d, F_d, G_d;
+    REAL* a_d, *F_d, *G_d;
 	cudaMalloc(&a_d, nelements*sizeof(REAL));
 	cudaMalloc(&F_d, nelements*sizeof(REAL));
 	cudaMalloc(&G_d, nelements*sizeof(REAL));
@@ -113,37 +94,36 @@ int main(int argc, char *argv[]){
 	g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (O+b.z-1)/(b.z));
 	cout << "Grid(" << g.x << ", " << g.y << ", " << g.z << ")" << endl;
 	cout << "Block(" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
+
+	
+
+	cout << "Filling first 3 states..."; fflush(stdout);
+    for (size_t l=0; l<3; ++l){
+		fillInitialCondition<<<g, b>>>(a_d, F_d, G_d, l, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
+		cucheck(cudaDeviceSynchronize());
+    }
+	cout << " done." << endl;
+
+	cudaMemcpy(a, &a_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
+	cudaMemcpy(F, &F_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
+	cudaMemcpy(G, &G_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
+
+    writeTimeSnapshot(filename, a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+    cout << "Written" << endl;
+    getchar();
+
+
     for (size_t l=3; l<L; ++l){
-		size_t t = l%buffsize;
-		size_t tm1 = (l-1)%buffsize;
-		size_t tm2 = (l-2)%buffsize;
-		size_t tm3 = (l-3)%buffsize;
+		cout << "Starting iteration l=" << l << endl;
+		size_t t = l%buffSize;
+		size_t tm1 = (l-1)%buffSize;
+		size_t tm2 = (l-2)%buffSize;
+		size_t tm3 = (l-3)%buffSize;
 
-		//kernel<<<g, b>>>(a_d, F_d, G_d, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl)
+		computeNextIteration<<<g, b>>>(a_d, F_d, G_d, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
+		cout << "Finished iteration l=" << l << endl;
 
-        for (size_t m=0; m<M; ++m){
-            for (size_t n=0; n<N; ++n){
-                for (size_t o=0; o<O; ++o){
-                    if (m == 0 || m == M-1 || m == M-2 || m == 1 ){
-                            a->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = (a->axes[0][m]);
-                            F->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(a->axes[1][n]);
-                            G->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/bigl - a->axes[2][o]);
-                    }
-                    if (n == 0 || n == N-1 || n == N-2 || n == 1 ){
-                            a->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = a->axes[0][m];
-                            F->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(a->axes[1][n]);
-                            G->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/bigl - a->axes[2][o]);
-                    }
-                    if (o == 0 || o == O-1 || o == O-2 || o == 1 ){
-                            a->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = a->axes[0][m];
-                            F->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(a->axes[1][n]);
-                            G->data[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/bigl - a->axes[2][o]);
-                    }
-                }
-            }
-        }
-
-        writeTimeSnapshot(filename, a->data, F->data, G->data, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+        writeTimeSnapshot(filename, a_d, F_d, G_d, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
         getchar();
     }
 
@@ -222,7 +202,6 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
     double mm = 1;
     for (size_t m=1; m<M; m=round(mm)){
         double nn = 1;
-            cout << m << " " << mm << endl;
             for (size_t n=1; n<N; n=round(nn)){
             double oo = 1;
             for (size_t o=1; o<O; o=round(oo)){

@@ -4,7 +4,7 @@ OBJ_DIR=obj
 VERBOSE=no
 GCC_FLAGS=-O3 -std=c++17 -fopenmp
 NVCC_FLAGS=-O3  
-LIBS=-pthread -fopenmp
+LIBS=
 DEFINES=
 INCLUDES=-I./vendor/eigen-3.3.9
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)
@@ -19,7 +19,7 @@ NVCC_OBJS=$(patsubst %.cu,$(OBJ_DIR)/%.cu.o,$(notdir $(CU_FILES)))
 all: $(TARGET)
 
 $(TARGET) : $(GCC_OBJS) $(NVCC_OBJS)
-	nvcc $(LIBS) -o $@ $?
+	nvcc $(LIBS) $(INCLUDES) -o $@ $?
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	g++ $(GCC_FLAGS) $(INCLUDES) -c -o $@ $<
