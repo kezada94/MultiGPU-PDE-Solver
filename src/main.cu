@@ -10,7 +10,6 @@
  
 using namespace Eigen;
 
-#include "Equation.cuh"
 #include "Grid.h"
 #include "Linspace.h"
 #include "kernels.cuh"
