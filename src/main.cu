@@ -22,7 +22,7 @@ const size_t buffSize = 4;
 
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
-REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
 MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getL_0(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
@@ -30,7 +30,7 @@ MatrixXcd getL_1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, si
 MatrixXcd getL_2(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getL_3(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 
-void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
+void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
 
 vector<REAL> genLinspace(REAL start, REAL end, size_t n){
 	vector<REAL> vec = vector<REAL>(n);
@@ -84,17 +84,17 @@ int main(int argc, char *argv[]){
     string filename = "result-"+to_string(M)+"-"+to_string(N)+"-"+to_string(O)+".dat";
 
     REAL* a_d, *F_d, *G_d;
+	cout << "Allocating GPU memory" << endl;
 	cudaMalloc(&a_d, nelements*sizeof(REAL));
 	cudaMalloc(&F_d, nelements*sizeof(REAL));
 	cudaMalloc(&G_d, nelements*sizeof(REAL));
+	cout << "done."<< endl;
 
 	dim3 g, b;
 	b = dim3(16, 16, 4);
 	g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (O+b.z-1)/(b.z));
 	cout << "Grid(" << g.x << ", " << g.y << ", " << g.z << ")" << endl;
 	cout << "Block(" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
-
-	
 
 	cout << "Filling first 3 states..."; fflush(stdout);
     for (size_t l=0; l<3; ++l){
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]){
 		computeNextIteration<<<g, b>>>(a_d, F_d, G_d, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
 		cout << "Finished iteration l=" << l << endl;
 
-        writeTimeSnapshot(filename, a_d, F_d, G_d, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+        writeTimeSnapshot(filename, a_d, F_d, G_d, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
         getchar();
     }
 
@@ -172,9 +172,9 @@ MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, si
     return Um1;
 }
 
-REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
     MatrixXcd Um1 = getUm1(a, F, G, t, r, theta, phi, M, N, O);
-    MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t-1, r, theta, phi, M, N, O))/dt); 
+    MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, tm1, r, theta, phi, M, N, O))/dt); 
     MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/dr); 
     MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/dtheta);
     MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/dphi); 
@@ -194,7 +194,7 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t 
 
 
 }
-void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
+void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
     int count = 0;
     ofstream file;
     file.open(filename);
@@ -206,7 +206,7 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
             for (size_t o=1; o<O; o=round(oo)){
                 if (file.is_open()){
                     //file << G[(t)*M*N*O + (m)*N*O + (n)*O + o] << "\n";
-                    file << getT00(a, F, G, t, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl) << "\n";
+                    file << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl) << "\n";
                     file.flush();
                 }
                 else{
