@@ -13,15 +13,16 @@ import time
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
-
+import sys
 # In[2]:
 
 
-M = 100
+M = sys.argv[1]
 _M = str(M)
 Z = np.genfromtxt("result-"+_M+"-"+_M+"-"+_M+".dat", delimiter="\n")
-Z = Z.reshape((-1, M-1, M-1, M-1))
+Z = Z.reshape((-1, 50, 50, 50))
 
+print(Z.shape)
 
 data = Z[0, :, :, :]
 positive = np.clip(data, 0, data.max())
