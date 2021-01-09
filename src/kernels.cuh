@@ -1,8 +1,7 @@
 #pragma once
-
-#include "Equation.cuh"
 #include <cuda.h>
 
+<<<<<<< HEAD
 __global__ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q){
 
 	int m = blockIdx.x*blockDim.x + threadIdx.x;
@@ -49,5 +48,12 @@ __global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t
 	a[(l)*epa*epa*epa + (gid_x)*epa*epa + (gid_y)*epa + gid_z] = dr*x;
 	F[(l)*epa*epa*epa + (gid_x)*epa*epa + (gid_y)*epa + gid_z] = q*(dtheta*y);
 	G[(l)*epa*epa*epa + (gid_x)*epa*epa + (gid_y)*epa + gid_z] = p*((dt*l)/bigl - dphi*z);
+=======
+__device__ REAL computeNexta(REAL *a, REAL *F, REAL *G, size_t t, size_t tm1, size_t tm2, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
+__device__ REAL computeNextF(REAL *a, REAL *F, REAL *G, size_t t, size_t tm1, size_t tm2, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
+__device__ REAL computeNextG(REAL *a, REAL *F, REAL *G, size_t t, size_t tm1, size_t tm2, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL L);
 
-} 
+__global__ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q);
+>>>>>>> 103c5bbf58c0aa5ba825499e1fb3c2b08e409e74
+
+__global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q);
