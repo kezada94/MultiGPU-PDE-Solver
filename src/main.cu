@@ -66,14 +66,17 @@ int main(int argc, char *argv[]){
     REAL dtheta = ax_theta[1] - ax_theta[0];
     REAL dphi = ax_phi[1] - ax_phi[0];
 
-	size_t nelements = buffSize*(M+2)*(N+2)*(O+2);
+	size_t nelements = buffSize*M*N*O;
 	cout << "Number of elements: " << nelements << endl;
 
 // its better to separate fdm grid with continuous axes
 	cout << "Generating grids..."; fflush(stdout);
-    REAL *a = new REAL[nelements];
-    REAL *F = new REAL[nelements];
-    REAL *G = new REAL[nelements];
+    REAL *a;
+	cudaMallocManaged(&a, nelements*sizeof(REAL));
+    REAL *F;
+	cudaMallocManaged(&F, nelements*sizeof(REAL));
+    REAL *G;
+	cudaMallocManaged(&G, nelements*sizeof(REAL));
 	cout << "done" << endl;
 
     REAL bigl = 4.0/6.0*(1.0/5.45*129.0)*50.9;
@@ -82,63 +85,20 @@ int main(int argc, char *argv[]){
     REAL l_1 = 1.f;
     REAL l_2 = 1.f;
 
-    string filename = "result-"+to_string(M)+"-"+to_string(N)+"-"+to_string(O)+".dat";
-
-	cout << "Total memory available: ";
-	size_t free, total;
-	cudaMemGetInfo(&free, &total);
-    cout << free/1000.0/1000.0/1000.0 << " GB" << endl;
-	size_t needed = nelements*sizeof(REAL)*3;
-	cout << "Total memory needed: " << needed/1000.0/1000.0/1000.0 << " GB" << endl;
-	
-	//-2 for the halo
-	uint32_t elementsPerAxisGPU = floor(pow(free*0.98/buffSize/nfunctions/sizeof(REAL), 1.0/3.0));
-	cout << "Number of elements³ fitting in gpu: " << elementsPerAxisGPU<< endl;
-	int i=1;
-	while((M+2)%i != 0 || (M+2)/i >= elementsPerAxisGPU){
-		i++;
-	}
-	uint32_t linearGPUSwaps = i;
-	cout << "GPU Swaps grid: " << linearGPUSwaps << "x" << linearGPUSwaps << "x"<< linearGPUSwaps << endl;
-	elementsPerAxisGPU = (M+2)/linearGPUSwaps;
-	cout << "Of " << elementsPerAxisGPU << " elements." << endl;
-	
-	
-
-	REAL* a_d, *F_d, *G_d;
-	cout << "Allocating GPU memory" << endl;
-	cudaMalloc(&a_d, pow(elementsPerAxisGPU, 3)*buffSize*sizeof(REAL));
-	cudaMalloc(&F_d, pow(elementsPerAxisGPU, 3)*buffSize*sizeof(REAL));
-	cudaMalloc(&G_d, pow(elementsPerAxisGPU, 3)*buffSize*sizeof(REAL));
-	cout << "done."<< endl;
+    string filename = "result-"+to_string(M)+".dat";
 
 	dim3 g, b;
 	b = dim3(16, 16, 4);
-	g = dim3((elementsPerAxisGPU+b.x-1)/(b.x), (elementsPerAxisGPU+b.y-1)/b.y, (elementsPerAxisGPU+b.z-1)/(b.z));
+	g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (O+b.z-1)/(b.z));
 	cout << "Grid(" << g.x << ", " << g.y << ", " << g.z << ")" << endl;
 	cout << "Block(" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
 
-	cout << "Filling first 3 states..."; fflush(stdout);
+	cout << "Filling first 3 sates..."; fflush(stdout);
     for (size_t l=0; l<3; ++l){
-		for (int i=0; i<linearGPUSwaps; i++){
-			for (int j=0; j<linearGPUSwaps; j++){
-				for (int k=0; k<linearGPUSwaps; k++){
-					fillInitialCondition<<<g, b>>>(a_d, F_d, G_d, l, M, N, O, elementsPerAxisGPU, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q, i*elementsPerAxisGPU, j*elementsPerAxisGPU, k*elementsPerAxisGPU);
-					cucheck(cudaDeviceSynchronize());
-					
-					cudaMemcpy(a[(l)*M*N*O + (i*N*O + j*O + k)*elementsPerAxisGPU], &a_d[(l)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-					cudaMemcpy(F[(l)*pow(elementsPerAxisGPU, 3) + ], &F_d[(l)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-					cudaMemcpy(G[(l)*pow(elementsPerAxisGPU, 3) + ], &G_d[(l)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-
-				}
-			}
-		}
+		fillInitialCondition<<<g, b>>>(a, F, G, l, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
+		cucheck(cudaDeviceSynchronize());
     }
 	cout << " done." << endl;
-
-	cudaMemcpy(a, &a_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-	cudaMemcpy(F, &F_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-	cudaMemcpy(G, &G_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
 
     writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
     cout << "Written" << endl;
@@ -152,7 +112,9 @@ int main(int argc, char *argv[]){
 		size_t tm2 = (l-2)%buffSize;
 		size_t tm3 = (l-3)%buffSize;
 
-		computeNextIteration<<<g, b>>>(a_d, F_d, G_d, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
+		cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
+
+		computeNextIteration<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
 		cucheck(cudaDeviceSynchronize());
 		cout << "Finished iteration l=" << l << endl;
 
@@ -161,19 +123,11 @@ int main(int argc, char *argv[]){
 		if (key == 'y'){
 		
 		cout << "Saving values..." << endl;
-		cudaMemcpy(a, &a_d[(tm1)*M*N*O], M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-		cudaMemcpy(F, &F_d[(tm1)*M*N*O], M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-		cudaMemcpy(G, &G_d[(tm1)*M*N*O], M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-
-		cudaMemcpy(&a[M*N*O], &a_d[(t)*M*N*O], M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-		cudaMemcpy(&F[M*N*O], &F_d[(t)*M*N*O], M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-		cudaMemcpy(&G[M*N*O], &G_d[(t)*M*N*O], M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-        writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+        writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
 		cout << "done." << endl;
         getchar();
 		}
     }
-
 	
     //Boundary filll
     return 0;
