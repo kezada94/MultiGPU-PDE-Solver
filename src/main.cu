@@ -19,6 +19,7 @@ using namespace std;
 
 const REAL PI = 3.14159265358979323846f;
 const size_t buffSize = 4;
+const size_t nfunctions= 3;
 
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
@@ -43,8 +44,8 @@ vector<REAL> genLinspace(REAL start, REAL end, size_t n){
 
 int main(int argc, char *argv[]){
 
-    if (argc != 5){
-        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O>\n");
+    if (argc != 7){
+        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q>\n");
         exit(1);
     }
 
@@ -54,6 +55,8 @@ int main(int argc, char *argv[]){
     const size_t O = atoi(argv[4]);
     REAL dt = atof(argv[1]);
     cout << dt << endl;
+    int p = atoi(argv[5]);
+    int q = atoi(argv[6]);
 
     vector<REAL> ax_r = genLinspace(0, 2*PI, M); // for r
     vector<REAL> ax_theta = genLinspace(0, PI, N); // for r
@@ -68,27 +71,21 @@ int main(int argc, char *argv[]){
 
 // its better to separate fdm grid with continuous axes
 	cout << "Generating grids..."; fflush(stdout);
-    REAL *a = new REAL[2*M*N*O];
-    REAL *F = new REAL[2*M*N*O];
-    REAL *G = new REAL[2*M*N*O];
+    REAL *a;
+	cudaMallocManaged(&a, nelements*sizeof(REAL));
+    REAL *F;
+	cudaMallocManaged(&F, nelements*sizeof(REAL));
+    REAL *G;
+	cudaMallocManaged(&G, nelements*sizeof(REAL));
 	cout << "done" << endl;
 
-    int p = 1;
-    int q = 1;
     REAL bigl = 4.0/6.0*(1.0/5.45*129.0)*50.9;
     //REAL bigl = 4.0/6.0*(1.0/E*186.0)*50.9;
 
     REAL l_1 = 1.f;
     REAL l_2 = 1.f;
 
-    string filename = "result-"+to_string(M)+"-"+to_string(N)+"-"+to_string(O)+".dat";
-
-    REAL* a_d, *F_d, *G_d;
-	cout << "Allocating GPU memory" << endl;
-	cudaMalloc(&a_d, nelements*sizeof(REAL));
-	cudaMalloc(&F_d, nelements*sizeof(REAL));
-	cudaMalloc(&G_d, nelements*sizeof(REAL));
-	cout << "done."<< endl;
+    string filename = "result-"+to_string(M)+".dat";
 
 	dim3 g, b;
 	b = dim3(16, 16, 4);
@@ -96,18 +93,14 @@ int main(int argc, char *argv[]){
 	cout << "Grid(" << g.x << ", " << g.y << ", " << g.z << ")" << endl;
 	cout << "Block(" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
 
-	cout << "Filling first 3 states..."; fflush(stdout);
+	cout << "Filling first 3 sates..."; fflush(stdout);
     for (size_t l=0; l<3; ++l){
-		fillInitialCondition<<<g, b>>>(a_d, F_d, G_d, l, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
+		fillInitialCondition<<<g, b>>>(a, F, G, l, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
 		cucheck(cudaDeviceSynchronize());
     }
 	cout << " done." << endl;
 
-	cudaMemcpy(a, &a_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-	cudaMemcpy(F, &F_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-	cudaMemcpy(G, &G_d[(0)*M*N*O], 2*M*N*O*sizeof(REAL), cudaMemcpyDeviceToHost);
-
-    writeTimeSnapshot(filename, a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+    writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
     cout << "Written" << endl;
     getchar();
 
@@ -119,13 +112,22 @@ int main(int argc, char *argv[]){
 		size_t tm2 = (l-2)%buffSize;
 		size_t tm3 = (l-3)%buffSize;
 
-		computeNextIteration<<<g, b>>>(a_d, F_d, G_d, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
+		cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
+
+		computeNextIteration<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
+		cucheck(cudaDeviceSynchronize());
 		cout << "Finished iteration l=" << l << endl;
 
-        writeTimeSnapshot(filename, a_d, F_d, G_d, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+		cout << "Save? [y/n]" << endl;
+		char key = getchar();
+		if (key == 'y'){
+		
+		cout << "Saving values..." << endl;
+        writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+		cout << "done." << endl;
         getchar();
+		}
     }
-
 	
     //Boundary filll
     return 0;
@@ -205,14 +207,13 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
             double oo = 1;
             for (size_t o=1; o<O; o=round(oo)){
                 if (file.is_open()){
-                    //file << G[(t)*M*N*O + (m)*N*O + (n)*O + o] << "\n";
+					//cout << m << ", " << n << ", " << o << endl;
                     file << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl) << "\n";
                     file.flush();
                 }
                 else{
                     std::cerr << "didn't write" << std::endl;
                 }
-                //fprintf(file, "%f\n", getT00(a, F, G, t, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl));
                 oo += (double)(O-2)/49.0;
             }
             nn += (double)(N-2)/49.0;

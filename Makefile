@@ -3,7 +3,7 @@ SRC_DIR=src
 OBJ_DIR=obj
 VERBOSE=no
 GCC_FLAGS=-O3 -std=c++17 -fopenmp
-NVCC_FLAGS=-O3  
+NVCC_FLAGS=-O3 -dc 
 LIBS=
 DEFINES=
 INCLUDES=-I./vendor/eigen-3.3.9
