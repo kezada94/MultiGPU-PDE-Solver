@@ -19,7 +19,7 @@ import sys
 
 M = sys.argv[1]
 _M = str(M)
-Z = np.genfromtxt("result-"+_M+"-"+_M+"-"+_M+".dat", delimiter="\n")
+Z = np.genfromtxt("result-"+_M+".dat", delimiter="\n")
 Z = Z.reshape((-1, 50, 50, 50))
 
 print(Z.shape)
@@ -33,9 +33,9 @@ d2[..., 1] = negative * (255./negative.max())
 d2[..., 2] = d2[...,1]
 d2[..., 3] = 10
 
-d2[:, 0, 0] = [255,0,0,100]
-d2[0, :, 0] = [0,255,0,100]
-d2[0, 0, :] = [0,0,255,100]
+d2[:, 0, 0] = [255,0,0,250]
+d2[0, :, 0] = [0,255,0,250]
+d2[0, 0, :] = [0,0,255,250]
 
 
 """
@@ -63,7 +63,7 @@ import numpy as np
 
 
 v = gl.GLVolumeItem(d2)
-#v.translate(-50,-50,-100)
+v.scale(3,3,3)
 w.addItem(v)
 
 ax = gl.GLAxisItem()
