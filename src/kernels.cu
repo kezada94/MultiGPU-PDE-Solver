@@ -43,7 +43,6 @@ __global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t
 	a[(l)*M*N*O + (gid_x)*N*O + (gid_y)*O + gid_z] = dr*gid_x;
 	F[(l)*M*N*O + (gid_x)*N*O + (gid_y)*O + gid_z] = q*(dtheta*gid_y);
 	G[(l)*M*N*O + (gid_x)*N*O + (gid_y)*O + gid_z] = p*((dt*l)/bigl - dphi*gid_z);
-
 } 
 
 
