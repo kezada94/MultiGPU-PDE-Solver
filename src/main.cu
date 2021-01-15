@@ -15,9 +15,6 @@ using namespace Eigen;
 #include "kernels.cuh"
 
 
-#include "EquationAlfa.cuh"
-#include "EquationF.cuh"
-#include "EquationG.cuh"
 using namespace std;
 
 const REAL PI = 3.14159265358979323846f;
