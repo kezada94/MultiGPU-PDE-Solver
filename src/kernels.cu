@@ -5,7 +5,7 @@
 
 #include "EquationAlfa.cuh"
 #include "EquationF.cuh"
-#include "EquationAlfa.cuh"
+#include "EquationG.cuh"
 
 __global__ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q){
 
@@ -30,9 +30,7 @@ __global__ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t
 	if (m<2 || m>M-3 || n<2 || n>N-3 || o<2 || o>O-3){
 		return;
 	}
-	computeNexta(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-	computeNextF(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-	computeNextG(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+	
 
 } 
 
