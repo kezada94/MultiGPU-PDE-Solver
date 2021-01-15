@@ -30,7 +30,9 @@ __global__ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t
 	if (m<2 || m>M-3 || n<2 || n>N-3 || o<2 || o>O-3){
 		return;
 	}
-	
+	a[(t)*M*N*O + (m)*N*O + (n)*O + o] = computeNexta(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+	F[(t)*M*N*O + (m)*N*O + (n)*O + o] = computeNextF(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+	G[(t)*M*N*O + (m)*N*O + (n)*O + o] = computeNextG(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
 
 } 
 
