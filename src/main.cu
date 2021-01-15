@@ -15,6 +15,9 @@ using namespace Eigen;
 #include "kernels.cuh"
 
 
+#include "EquationAlfa.cuh"
+#include "EquationF.cuh"
+#include "EquationG.cuh"
 using namespace std;
 
 const REAL PI = 3.14159265358979323846f;
@@ -79,7 +82,8 @@ int main(int argc, char *argv[]){
 	cudaMallocManaged(&G, nelements*sizeof(REAL));
 	cout << "done" << endl;
 
-    REAL bigl = 4.0/6.0*(1.0/5.45*129.0)*50.9;
+    //REAL bigl = 4.0/6.0*(1.0/5.45*129.0)*50.9;
+    REAL bigl = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
     //REAL bigl = 4.0/6.0*(1.0/E*186.0)*50.9;
 
     REAL l_1 = 1.f;
@@ -116,6 +120,13 @@ int main(int argc, char *argv[]){
 
 		computeNextIteration<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
 		cucheck(cudaDeviceSynchronize());
+        computeNexta<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+		cucheck(cudaDeviceSynchronize());
+	    computeNextF<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+		cucheck(cudaDeviceSynchronize());
+	    computeNextG<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+		cucheck(cudaDeviceSynchronize());
+
 		cout << "Finished iteration l=" << l << endl;
 
 		cout << "Save? [y/n]" << endl;
@@ -180,7 +191,8 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
     MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/dtheta);
     MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/dphi); 
 
-    REAL K = 4970.25;
+    //REAL K = 4970.25;
+    REAL K = 2.0;
     complex<double> cons = -K/2.0f;
     REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(-1.0*L_0*L_0 + l_1*L_1*L_1 + l_1*L_2*L_2 + l_2*L_3*L_3)
                         + bigl/4.0*((-1.0*(L_0*L_0 - L_0*L_0)*(L_0*L_0 - L_0*L_0)
