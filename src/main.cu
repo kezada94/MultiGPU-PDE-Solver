@@ -83,7 +83,7 @@ int main(int argc, char *argv[]){
 	cout << "done" << endl;
 
     //REAL bigl = 4.0/6.0*(1.0/5.45*129.0)*50.9;
-    REAL bigl = 1.0 //4.0/6.0*(1.0/5.45*129.0)*50.9;
+    REAL bigl = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
     //REAL bigl = 4.0/6.0*(1.0/E*186.0)*50.9;
 
     REAL l_1 = 1.f;
@@ -120,11 +120,11 @@ int main(int argc, char *argv[]){
 
 		computeNextIteration<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
 		cucheck(cudaDeviceSynchronize());
-        computeNexta<<<g, b>>>(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+        computeNexta<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
 		cucheck(cudaDeviceSynchronize());
-	    computeNextF<<<g, b>>>(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+	    computeNextF<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
 		cucheck(cudaDeviceSynchronize());
-	    computeNextG<<<g, b>>>(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+	    computeNextG<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
 		cucheck(cudaDeviceSynchronize());
 
 		cout << "Finished iteration l=" << l << endl;
