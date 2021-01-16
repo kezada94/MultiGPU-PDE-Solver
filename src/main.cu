@@ -120,12 +120,7 @@ int main(int argc, char *argv[]){
 
 		computeNextIteration<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
 		cucheck(cudaDeviceSynchronize());
-        computeNexta<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-		cucheck(cudaDeviceSynchronize());
-	    computeNextF<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-		cucheck(cudaDeviceSynchronize());
-	    computeNextG<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-		cucheck(cudaDeviceSynchronize());
+        
 
 		cout << "Finished iteration l=" << l << endl;
 
