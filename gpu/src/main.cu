@@ -204,7 +204,7 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
 void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
     int count = 0;
     ofstream file;
-    file.open(filename);
+    file.open(filename, std::ofstream::app);
     double mm = 1;
     for (size_t m=1; m<M; m=round(mm)){
         double nn = 1;
