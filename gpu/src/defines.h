@@ -21,4 +21,4 @@
 	assert(0);																												\
 	}\
 	}
-typedef double REAL;
+typedef float REAL;

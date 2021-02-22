@@ -49,16 +49,16 @@ std::fstream& gotoLine(std::fstream& file, unsigned int num){
 }
 
 void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q){
-	fstream file("../alfa(r)-1000.csv");
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t m=0; m<M; m++){
+	fstream file("../alfa(r)-25-3-1000.csv");
 		gotoLine(file, m);
 		REAL val;
 		file >> val;
 		for(size_t n=0; n<N; n++){
 			for(size_t o=0; o<O; o++){
 				a[(l)*M*N*O + (m)*N*O + (n)*O + o] = val;
-				F[(l)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
+				F[(l)*M*N*O + (m)*N*O + (n)*O + o] = (REAL)q*(dtheta*(REAL)n);
 				G[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/bigl - dphi*o);
 			}
 		}
