@@ -180,7 +180,7 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
     //REAL K = 4970.25;
     REAL K = 2.0;
     complex<double> cons = -K/2.0f;
-    REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(-1.0*L_0*L_0 + 0*L_1*L_1 + 0*L_2*L_2 + 0*L_3*L_3)).trace()).real();/*
+    REAL t00 = ((cons)*(L_0*L_0 /*- 1.0/2.0*-1.0*(-1.0*L_0*L_0 + 0*L_1*L_1 + 0*L_2*L_2 + 0*L_3*L_3)*/).trace()).real();/*
                         + bigl/4.0*(-1.0*getF(L_0, L_0)*getF(L_0, L_0)
                                     +l_1*getF(L_0, L_1)*getF(L_0, L_1)
                                     +l_1*getF(L_0, L_2)*getF(L_0, L_2)

@@ -6,7 +6,7 @@
 #include <fstream>
 #include <limits>
 
-void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q){
+void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q, int L){
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t m=0; m<M; m++){
 		cout << m << endl;
@@ -15,17 +15,17 @@ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t 
 				if (m == 0 || m == M-1 || m == M-2 || m == 1 ){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = dr*m;
 					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/bigl - dphi*o);
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
 				}
 				if (n == 0 || n == N-1 || n == N-2 || n == 1 ){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = dr*m;
 					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/bigl - dphi*o);
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
 				}
 				if (o == 0 || o == O-1 || o == O-2 || o == 1 ){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = dr*m;
 					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/bigl - dphi*o);
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
 				}
 				if (m<2 || m>M-3 || n<2 || n>N-3 || o<2 || o>O-3){
 					
@@ -48,7 +48,7 @@ std::fstream& gotoLine(std::fstream& file, unsigned int num){
     return file;
 }
 
-void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q){
+void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q, int L){
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t m=0; m<M; m++){
 	fstream file("../alfa(r)-25-3-1000.csv");
@@ -59,7 +59,7 @@ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t 
 			for(size_t o=0; o<O; o++){
 				a[(l)*M*N*O + (m)*N*O + (n)*O + o] = val;
 				F[(l)*M*N*O + (m)*N*O + (n)*O + o] = (REAL)q*(dtheta*(REAL)n);
-				G[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/bigl - dphi*o);
+				G[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
 			}
 		}
 	}
