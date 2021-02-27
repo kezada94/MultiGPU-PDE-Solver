@@ -44,8 +44,8 @@ vector<REAL> genLinspace(REAL start, REAL end, size_t n){
 
 int main(int argc, char *argv[]){
 
-    if (argc != 7){
-        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q>\n");
+    if (argc != 8){
+        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n>\n");
         exit(1);
     }
 
@@ -57,6 +57,7 @@ int main(int argc, char *argv[]){
     cout << dt << endl;
     int p = atoi(argv[5]);
     int q = atoi(argv[6]);
+    int n = atoi(argv[7]);
 
     vector<REAL> ax_r = genLinspace(0, 2*PI, M); // for r
     vector<REAL> ax_theta = genLinspace(0, PI, N); // for r
@@ -76,6 +77,21 @@ int main(int argc, char *argv[]){
     REAL *G = new REAL[nelements];
 	cout << "done" << endl;
 
+    cout << "Reading values for a(r)...";fflush(stdout)
+    REAL *a_0 = new REAL[M];
+    int i = 0;
+	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-1000.csv");
+    if (file.is_open()){
+        string line;
+        while(getline(file, line)){
+            a_0[i] = stod(line);
+            i++;
+        }
+    } else {
+        cout << "Could not open file." << endl;
+        exit(-190);
+    }
+    cout << "done. " << i << " elements red" << endl;;
     //REAL bigl = 4.0/6.0*(1.0/5.45*129.0)*50.9;
     REAL bigl = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
     //REAL bigl = 4.0/6.0*(1.0/E*186.0)*50.9;
@@ -87,10 +103,12 @@ int main(int argc, char *argv[]){
 
 	
 
-	cout << "Filling first 3 sates..."; fflush(stdout);
-    for (size_t l=0; l<3; ++l){
-		fillInitialCondition(a, F, G, l, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
-    }
+	cout << "Filling state 0..."; fflush(stdout);
+	fillInitialCondition(a, F, G, l, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q, a_0);
+	cout << " done." << endl;
+
+	cout << "Filling state 1..."; fflush(stdout);
+	computeFirstIteration(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q, a_0);
 	cout << " done." << endl;
 
     writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
@@ -98,7 +116,7 @@ int main(int argc, char *argv[]){
     getchar();
 
 
-    for (size_t l=3; l<L; ++l){
+    for (size_t l=2; l<L; ++l){
 		cout << "Starting iteration l=" << l << endl;
 		size_t t = l%buffSize;
 		size_t tm1 = (l-1)%buffSize;
@@ -107,7 +125,7 @@ int main(int argc, char *argv[]){
 
 		cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
 
-		computeNextIteration(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
+		computeNextIteration(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q, a_0);
         
 
 		cout << "Finished iteration l=" << l << endl;
