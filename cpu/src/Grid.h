@@ -3,7 +3,6 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <boost/multi_array.hpp>
 #include "defines.h"
 #include "Linspace.h"
 
