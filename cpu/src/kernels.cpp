@@ -39,11 +39,12 @@ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t 
 } 
 
 void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
-	#pragma omp parallel for schedule(static) num_threads(10)
+	//#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t m=0; m<M; m++){
-		cout << m << endl;
+		
 		for(size_t n=0; n<N; n++){
 			for(size_t o=0; o<O; o++){
+				cout << "r=" << m << " | theta=" << n << " | phi=" << o << endl;
 				if (m == 0 || m == M-1 ){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = a_0[m];
 					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);

@@ -108,7 +108,7 @@ int main(int argc, char *argv[]){
 	cout << " done." << endl;
 
 	cout << "Filling state 1..."; fflush(stdout);
-	computeFirstIteration(a, F, G, 1, 0, -1, -2, -3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+	computeFirstIteration(a, F, G, 1, 1, 0, -1, -2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	cout << " done." << endl;
 
     writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
