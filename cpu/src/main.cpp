@@ -107,16 +107,20 @@ int main(int argc, char *argv[]){
 	fillInitialCondition(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	cout << " done." << endl;
 
-	cout << "Filling state 1..."; fflush(stdout);
-	computeFirstIteration(a, F, G, 1, 1, 0, -1, -2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    cout << "Filling state 1..."; fflush(stdout);
+	fillInitialCondition(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	cout << " done." << endl;
 
-    writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
+	cout << "Filling state 2..."; fflush(stdout);
+	computeFirstIteration(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+	cout << " done." << endl;
+
+    writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
     cout << "Written" << endl;
     getchar();
 
 
-    for (size_t l=2; l<L; ++l){
+    for (size_t l=3; l<L; ++l){
 		cout << "Starting iteration l=" << l << endl;
 		size_t t = l%buffSize;
 		size_t tm1 = (l-1)%buffSize;

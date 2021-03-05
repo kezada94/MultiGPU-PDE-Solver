@@ -66,7 +66,7 @@ w.setWindowTitle('pyqtgraph example: GLVolumeItem')
 #w.addItem(b)
 g = gl.GLGridItem()
 g.translate(50,50,0)
-g.scale(5, 5, 1)
+g.scale(1, 1, 1)
 w.addItem(g)
 
 import numpy as np
