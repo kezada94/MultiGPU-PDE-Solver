@@ -25,7 +25,7 @@ const size_t nfunctions= 3;
 
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
-REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb);
 MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getL_0(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
@@ -33,7 +33,7 @@ MatrixXcd getL_1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, si
 MatrixXcd getL_2(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getL_3(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 
-void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl);
+void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb);
 
 vector<REAL> genLinspace(REAL start, REAL end, size_t n){
 	vector<REAL> vec = vector<REAL>(n);
@@ -46,8 +46,8 @@ vector<REAL> genLinspace(REAL start, REAL end, size_t n){
 
 int main(int argc, char *argv[]){
 
-    if (argc != 7){
-        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q>\n");
+    if (argc != 8){
+        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n>\n");
         exit(1);
     }
 
@@ -59,6 +59,7 @@ int main(int argc, char *argv[]){
     cout << dt << endl;
     int p = atoi(argv[5]);
     int q = atoi(argv[6]);
+    int n = atoi(argv[7]);
 
     vector<REAL> ax_r = genLinspace(0, 2*PI, M); // for r
     vector<REAL> ax_theta = genLinspace(0, PI, N); // for r
@@ -80,10 +81,26 @@ int main(int argc, char *argv[]){
     REAL *G;
 	cudaMallocManaged(&G, nelements*sizeof(REAL));
 	cout << "done" << endl;
+    cout << "Reading values for a(r)...";fflush(stdout);
+    REAL *a_0;
+    cudaMallocManaged(&a_0, M*sizeof(REAL));
+    int i = 0;
+	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-1000.csv");
+    if (file.is_open()){
+        string line;
+        while(getline(file, line)){
+            a_0[i] = stod(line);
+            i++;
+        }
+    } else {
+        cout << "Could not open file." << endl;
+        exit(-190);
+    }
+    cout << "done. " << i << " elements red" << endl;;
 
-    //REAL bigl = 4.0/6.0*(1.0/5.45*129.0)*50.9;
-    REAL bigl = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
-    //REAL bigl = 4.0/6.0*(1.0/E*186.0)*50.9;
+    //REAL lamb = 4.0/6.0*(1.0/5.45*129.0)*50.9;
+    REAL lamb = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
+    //REAL lamb = 4.0/6.0*(1.0/E*186.0)*50.9;
 
     REAL l_1 = 1.f;
     REAL l_2 = 1.f;
@@ -96,14 +113,22 @@ int main(int argc, char *argv[]){
 	cout << "Grid(" << g.x << ", " << g.y << ", " << g.z << ")" << endl;
 	cout << "Block(" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
 
-	cout << "Filling first 3 sates..."; fflush(stdout);
-    for (size_t l=0; l<3; ++l){
-		fillInitialCondition<<<g, b>>>(a, F, G, l, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
-		cucheck(cudaDeviceSynchronize());
-    }
+	
+	cout << "Filling state 0..."; fflush(stdout);
+	fillInitialCondition<<<g, b>>>(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
 	cout << " done." << endl;
 
-    writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+    cout << "Filling state 1..."; fflush(stdout);
+	fillInitialCondition<<<g, b>>>(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
+	cout << " done." << endl;
+
+	cout << "Filling state 2..."; fflush(stdout);
+    computeFirsta<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L, a_0);
+    computeFirstF<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    computeFirstG<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+	cout << " done." << endl;
+
+    writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb);
     cout << "Written" << endl;
     getchar();
 
@@ -117,14 +142,9 @@ int main(int argc, char *argv[]){
 
 		cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
 
-		computeNextIteration<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl, p, q);
-		cucheck(cudaDeviceSynchronize());
-        computeNexta<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-		cucheck(cudaDeviceSynchronize());
-	    computeNextF<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-		cucheck(cudaDeviceSynchronize());
-	    computeNextG<<<g, b>>>(a, F, G, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
-		cucheck(cudaDeviceSynchronize());
+        computeNexta<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L, a_0);
+        computeNextF<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+        computeNextG<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);        
 
 		cout << "Finished iteration l=" << l << endl;
 
@@ -132,7 +152,7 @@ int main(int argc, char *argv[]){
 		char key = getchar();
 		if (key == 'y'){
             cout << "Saving values..." << endl;
-            writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl);
+            writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb);
             cout << "done." << endl;
             getchar();
 		}
@@ -183,7 +203,7 @@ MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, si
     return Um1;
 }
 
-REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb){
     MatrixXcd Um1 = getUm1(a, F, G, t, r, theta, phi, M, N, O);
     MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, tm1, r, theta, phi, M, N, O))/dt); 
     MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/dr); 
@@ -193,8 +213,8 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
     //REAL K = 4970.25;
     REAL K = 2.0;
     complex<double> cons = -K/2.0f;
-    REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(-1.0*L_0*L_0 + l_1*L_1*L_1 + l_1*L_2*L_2 + l_2*L_3*L_3)
-                        + bigl/4.0*((-1.0*(L_0*L_0 - L_0*L_0)*(L_0*L_0 - L_0*L_0)
+    REAL t00 = ((cons)*(L_0*L_0 /*- 1.0/2.0*-1.0*(-1.0*L_0*L_0 + l_1*L_1*L_1 + l_1*L_2*L_2 + l_2*L_3*L_3*/
+                        /*+ lamb/4.0*((-1.0*(L_0*L_0 - L_0*L_0)*(L_0*L_0 - L_0*L_0)
                                     +l_1*(L_0*L_1 - L_1*L_0)*(L_0*L_1 - L_1*L_0)
                                     +l_1*(L_0*L_2 - L_2*L_0)*(L_0*L_2 - L_2*L_0)
                                     +l_2*(L_0*L_3 - L_3*L_0)*(L_0*L_3 - L_3*L_0)) 
@@ -203,12 +223,12 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
                                         -1.0*(L_0*L_3 - L_3*L_0)*(L_0*L_3 - L_3*L_0)
                                         +l_1*l_1*(L_1*L_2 - L_2*L_1)*(L_1*L_2 - L_2*L_1)
                                         +l_1*l_2*(L_1*L_3 - L_3*L_1)*(L_1*L_3 - L_3*L_1)
-                                        +l_2*l_1*(L_3*L_2 - L_2*L_3)*(L_3*L_2 - L_2*L_3)) )).trace()).real();
+                                        +l_2*l_1*(L_3*L_2 - L_2*L_3)*(L_3*L_2 - L_2*L_3)) )*/).trace()).real();
     return t00;
 
 
 }
-void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl){
+void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb){
     int count = 0;
     ofstream file;
     file.open(filename, std::ofstream::app);
@@ -220,7 +240,7 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
             for (size_t o=1; o<O; o=round(oo)){
                 if (file.is_open()){
 					//cout << m << ", " << n << ", " << o << endl;
-                    file << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, bigl) << "\n";
+                    file << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb) << "\n";
                     file.flush();
                 }
                 else{
