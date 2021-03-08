@@ -21,7 +21,7 @@ n = sys.argv[2]
 q = sys.argv[3]
 _M = str(M)
 Z = np.genfromtxt("result2-"+str(n)+"-"+str(q)+"-"+_M+".dat", delimiter="\n")
-Z = Z.reshape((-1, 1000, 1000, 3))
+Z = Z.reshape((-1, 100, 100, 10))
 
 L = Z.shape[0]
 print(Z.shape)
