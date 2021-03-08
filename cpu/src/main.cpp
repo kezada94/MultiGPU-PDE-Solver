@@ -99,7 +99,7 @@ int main(int argc, char *argv[]){
     REAL l_1 = 1.f;
     REAL l_2 = 1.f;
 
-    string filename = "../result-"+to_string(M)+".dat";
+    string filename = "result-"+to_string(M)+".dat";
 
 	
 
@@ -227,7 +227,7 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
 void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda){
     int count = 0;
     ofstream file;
-    file.open(filename, std::ofstream::app);
+    file.open(filename);
     //file.open(filename, std::ofstream::app);
     double mm = 1;
     for (size_t m=1; m<M; m=round(mm)){
@@ -244,11 +244,11 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
                 else{
                     std::cerr << "didn't write" << std::endl;
                 }
-                oo += (double)(O-2)/2.0;
+                oo += (double)(O-2)/9.0;
             }
-            nn += (double)(N-2)/999.0;
+            nn += (double)(N-2)/99.0;
         }
-        mm += (double)(M-2)/999.0;
+        mm += (double)(M-2)/99.0;
     }
     file.close();
 

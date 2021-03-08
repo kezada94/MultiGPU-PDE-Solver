@@ -82,9 +82,11 @@ int main(int argc, char *argv[]){
 	cudaMallocManaged(&G, nelements*sizeof(REAL));
 	cout << "done" << endl;
     cout << "Reading values for a(r)...";fflush(stdout);
+
     REAL *a_0;
     cudaMallocManaged(&a_0, M*sizeof(REAL));
     int i = 0;
+
 	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-1000.csv");
     if (file.is_open()){
         string line;
@@ -116,16 +118,21 @@ int main(int argc, char *argv[]){
 	
 	cout << "Filling state 0..."; fflush(stdout);
 	fillInitialCondition<<<g, b>>>(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
+	cudaDeviceSynchronize();
 	cout << " done." << endl;
 
     cout << "Filling state 1..."; fflush(stdout);
 	fillInitialCondition<<<g, b>>>(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
+	cudaDeviceSynchronize();
 	cout << " done." << endl;
 
 	cout << "Filling state 2..."; fflush(stdout);
-    computeFirsta<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L, a_0);
-    computeFirstF<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-    computeFirstG<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    computeFirsta<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
+	cudaDeviceSynchronize();
+    computeFirstF<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1);
+	cudaDeviceSynchronize();
+    computeFirstG<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1);
+	cudaDeviceSynchronize();
 	cout << " done." << endl;
 
     writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb);
@@ -142,9 +149,12 @@ int main(int argc, char *argv[]){
 
 		cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
 
-        computeNexta<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L, a_0);
-        computeNextF<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-        computeNextG<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);        
+        computeNexta<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
+	cudaDeviceSynchronize();
+        computeNextF<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1);
+	cudaDeviceSynchronize();
+        computeNextG<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1);        
+	cudaDeviceSynchronize();
 
 		cout << "Finished iteration l=" << l << endl;
 
@@ -169,17 +179,17 @@ static MatrixXcd i2x2 = [] {
 }();
 static MatrixXcd t1 = [] {
     MatrixXcd matrix(2,2);
-    matrix << 0, 1.if, 1.if, 0;
+    matrix << 0, 1, 1., 0;
     return matrix;
 }();
 static MatrixXcd t2 = [] {
     MatrixXcd matrix(2,2);
-    matrix << 0, -1, 1, 0;
+    matrix << 0, -1.if, 1.if, 0;
     return matrix;
 }();
 static MatrixXcd t3 = [] {
     MatrixXcd matrix(2,2) ;
-    matrix << 0, 1, -1, 0;
+    matrix << 1, 0, 0, -1;
     return matrix;
 }();
 MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
@@ -203,54 +213,66 @@ MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, si
     return Um1;
 }
 
-REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb){
+MatrixXcd getF(MatrixXcd L1, MatrixXcd L2){
+    return (L1*L2 - L2*L1);
+}
+
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda){
     MatrixXcd Um1 = getUm1(a, F, G, t, r, theta, phi, M, N, O);
     MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, tm1, r, theta, phi, M, N, O))/dt); 
     MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/dr); 
     MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/dtheta);
     MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/dphi); 
-
     //REAL K = 4970.25;
     REAL K = 2.0;
     complex<double> cons = -K/2.0f;
-    REAL t00 = ((cons)*(L_0*L_0 /*- 1.0/2.0*-1.0*(-1.0*L_0*L_0 + l_1*L_1*L_1 + l_1*L_2*L_2 + l_2*L_3*L_3*/
-                        /*+ lamb/4.0*((-1.0*(L_0*L_0 - L_0*L_0)*(L_0*L_0 - L_0*L_0)
-                                    +l_1*(L_0*L_1 - L_1*L_0)*(L_0*L_1 - L_1*L_0)
-                                    +l_1*(L_0*L_2 - L_2*L_0)*(L_0*L_2 - L_2*L_0)
-                                    +l_2*(L_0*L_3 - L_3*L_0)*(L_0*L_3 - L_3*L_0)) 
-                            + -1.0/4.0*(-1.0*(L_0*L_1 - L_1*L_0)*(L_0*L_1 - L_1*L_0)
-                                        -1.0*(L_0*L_2 - L_2*L_0)*(L_0*L_2 - L_2*L_0)
-                                        -1.0*(L_0*L_3 - L_3*L_0)*(L_0*L_3 - L_3*L_0)
-                                        +l_1*l_1*(L_1*L_2 - L_2*L_1)*(L_1*L_2 - L_2*L_1)
-                                        +l_1*l_2*(L_1*L_3 - L_3*L_1)*(L_1*L_3 - L_3*L_1)
-                                        +l_2*l_1*(L_3*L_2 - L_2*L_3)*(L_3*L_2 - L_2*L_3)) )*/).trace()).real();
+    REAL t00 = ((cons)*(L_0*L_0 /*- 1.0/2.0*-1.0*(-1.0*L_0*L_0 + 0*L_1*L_1 + 0*L_2*L_2 + 0*L_3*L_3)*/).trace()).real();/*
+                        + lambda/4.0*(-1.0*getF(L_0, L_0)*getF(L_0, L_0)
+                                    +l_1*getF(L_0, L_1)*getF(L_0, L_1)
+                                    +l_1*getF(L_0, L_2)*getF(L_0, L_2)
+                                    +l_2*getF(L_0, L_3)*getF(L_0, L_3)
+                            	    -(-1.0/4.0*(-1.0*getF(L_0, L_1)*getF(L_0, L_1)
+                                        	-1.0*getF(L_0, L_2)*getF(L_0, L_2)
+                                        	-1.0*getF(L_0, L_3)*getF(L_0, L_3)
+                                        	-1.0*getF(L_1, L_0)*getF(L_1, L_0)
+                                        	-1.0*getF(L_2, L_0)*getF(L_2, L_0)
+                                        	-1.0*getF(L_3, L_0)*getF(L_3, L_0)
+                                        	+l_1*l_1*getF(L_1, L_2)*getF(L_1, L_2)
+                                        	+l_1*l_1*getF(L_2, L_1)*getF(L_2, L_1)
+                                        	+l_1*l_2*getF(L_1, L_3)*getF(L_1, L_3)
+                                        	+l_1*l_2*getF(L_3, L_1)*getF(L_3, L_1)
+                                        	+l_2*l_1*getF(L_2, L_3)*getF(L_2, L_3)
+                                        	+l_2*l_1*getF(L_3, L_2)*getF(L_3, L_2))) )).trace()).real();*/
+    //return G[(0)*M*N*O + (r)*N*O + (theta)*O + phi];//t00;
     return t00;
 
 
 }
-void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb){
+void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda){
     int count = 0;
     ofstream file;
-    file.open(filename, std::ofstream::app);
+    file.open(filename);
+    //file.open(filename, std::ofstream::app);
     double mm = 1;
     for (size_t m=1; m<M; m=round(mm)){
+    	cout << m << endl;
         double nn = 1;
             for (size_t n=1; n<N; n=round(nn)){
             double oo = 1;
             for (size_t o=1; o<O; o=round(oo)){
                 if (file.is_open()){
 					//cout << m << ", " << n << ", " << o << endl;
-                    file << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb) << "\n";
+                    file <<std::fixed  << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda) << "\n";
                     file.flush();
                 }
                 else{
                     std::cerr << "didn't write" << std::endl;
                 }
-                oo += (double)(O-2)/49.0;
+                oo += (double)(O-2)/9.0;
             }
-            nn += (double)(N-2)/49.0;
+            nn += (double)(N-2)/99.0;
         }
-        mm += (double)(M-2)/49.0;
+        mm += (double)(M-2)/99.0;
     }
     file.close();
 
