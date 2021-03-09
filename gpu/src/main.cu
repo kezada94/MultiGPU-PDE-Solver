@@ -127,13 +127,17 @@ int main(int argc, char *argv[]){
 	cout << " done." << endl;
 
 	cout << "Filling state 2..."; fflush(stdout);
-    computeFirsta<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
+    computeFirsta<<<g, b>>>(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
 	cudaDeviceSynchronize();
-    computeFirstF<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1);
+	cout << "a done." << endl;
+
+    computeFirstF<<<g, b>>>(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
 	cudaDeviceSynchronize();
-    computeFirstG<<<g, b>>>(a, F, G, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1);
+	cout << "F done." << endl;
+
+    computeFirstG<<<g, b>>>(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
 	cudaDeviceSynchronize();
-	cout << " done." << endl;
+	cout << "G done." << endl;
 
     writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb);
     cout << "Written" << endl;
@@ -149,11 +153,11 @@ int main(int argc, char *argv[]){
 
 		cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
 
-        computeNexta<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
+        computeNexta<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
 	cudaDeviceSynchronize();
-        computeNextF<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1);
+        computeNextF<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);
 	cudaDeviceSynchronize();
-        computeNextG<<<g, b>>>(a, F, G, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1);        
+        computeNextG<<<g, b>>>(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, 1, a_0);        
 	cudaDeviceSynchronize();
 
 		cout << "Finished iteration l=" << l << endl;
