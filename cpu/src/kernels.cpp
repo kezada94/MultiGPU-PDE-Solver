@@ -14,18 +14,18 @@ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t 
 			for(size_t o=0; o<O; o++){
 				if (m == 0 || m == M-1){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = a_0[m];
-					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
+					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n) + PI_2;
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o) + PI_3;
 				}
 				else if (n == 0 || n == N-1){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = a_0[m];
-					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
+					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n) + PI_2;
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o) + PI_3;
 				}
 				else if (o == 0 || o == O-1){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = a_0[m];
-					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
+					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n) + PI_2;
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o) + PI_3;
 				} else {
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = computeNexta(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
 					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = computeNextF(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
@@ -46,18 +46,18 @@ void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t
 			for(size_t o=0; o<O; o++){
 				if (m == 0 || m == M-1 ){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = a_0[m];
-					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
+					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n) + PI_2;
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o) + PI_3;
 				}
 				else if (n == 0 || n == N-1){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = a_0[m];
-					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
+					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n) + PI_2;
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o) + PI_3;
 				}
 				else if (o == 0 || o == O-1){
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = a_0[m];
-					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n);
-					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
+					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = q*(dtheta*n) + PI_2;
+					G[(t)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o) + PI_3;
 				} else {
 					a[(t)*M*N*O + (m)*N*O + (n)*O + o] = computeFirsta(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
 					F[(t)*M*N*O + (m)*N*O + (n)*O + o] = computeFirstF(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
@@ -83,8 +83,8 @@ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t 
 		for(size_t n=0; n<N; n++){
 			for(size_t o=0; o<O; o++){
 				a[(l)*M*N*O + (m)*N*O + (n)*O + o] = a_0[m];
-				F[(l)*M*N*O + (m)*N*O + (n)*O + o] = (REAL)q*(dtheta*(REAL)n);
-				G[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o);
+				F[(l)*M*N*O + (m)*N*O + (n)*O + o] = (REAL)q*(dtheta*(REAL)n) + PI_2;
+				G[(l)*M*N*O + (m)*N*O + (n)*O + o] = p*((dt*l)/L - dphi*o) + PI_3;
 			}
 		}
 	}
