@@ -8,6 +8,7 @@
 #define E5 0.001
 #define E6 0.001
 
-#define PI_2 E2*sin(dr*m)*sin(dtheta*n)*sin(dphi*o)
-#define PI_3 E3*sin(dr*m)*sin(dtheta*n)*sin(dphi*o)
+#define PI_1 0//E1*sin(dr*m)*sin(dtheta*n)*sin(dphi*o)
+#define PI_2 0//E2*sin(dr*m)*sin(dtheta*n)*sin(dphi*o)
+#define PI_3 0//E3*sin(dr*m)*sin(dtheta*n)*sin(dphi*o)
 typedef double REAL;

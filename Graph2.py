@@ -19,6 +19,7 @@ import sys
 M = sys.argv[1]
 n = sys.argv[2]
 q = sys.argv[3]
+t = int(sys.argv[4])
 _M = str(M)
 Z = np.genfromtxt("result2-"+str(n)+"-"+str(q)+"-"+_M+".dat", delimiter="\n")
 Z = Z.reshape((-1, 100, 100, 10))
@@ -26,7 +27,7 @@ Z = Z.reshape((-1, 100, 100, 10))
 L = Z.shape[0]
 print(Z.shape)
 
-data = Z[0, 1:, 1:, -2:]
+data = Z[t, 1:, 1:, -2:]
 interr = (data - (data.min()))
 #print("T00 maximo:", data.max())
 #print("T00 minimo:", data.min())
