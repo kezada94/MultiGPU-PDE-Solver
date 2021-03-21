@@ -116,7 +116,7 @@ int main(int argc, char *argv[]){
 
 	cout << " done." << endl;
 
-    writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
+    writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
     cout << "Written" << endl;
     getchar();
 
