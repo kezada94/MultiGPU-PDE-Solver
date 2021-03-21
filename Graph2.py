@@ -29,8 +29,8 @@ print(Z.shape)
 
 data = Z[t, 1:, 1:, -2:]
 interr = (data - (data.min()))
-#print("T00 maximo:", data.max())
-#print("T00 minimo:", data.min())
+print("T00 maximo:", data.max())
+print("T00 minimo:", data.min())
 scale = (interr )#np.clip(interr, 0, interr.max())
 #positive = (np.clip(scale, 0.0000, scale.max()))#np.clip(interr, 0, interr.max())
 #negative = (np.clip(-scale, 0.0000, -scale.min()))

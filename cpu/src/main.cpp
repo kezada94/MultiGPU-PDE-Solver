@@ -67,7 +67,8 @@ int main(int argc, char *argv[]){
     REAL dtheta = ax_theta[1] - ax_theta[0];
     REAL dphi = ax_phi[1] - ax_phi[0];
 
-	size_t nelements = buffSize*M*N*O;
+    // +2 for ghost points offset
+	size_t nelements = buffSize*(M+2)*(N+2)*(O+2);
 	cout << "Number of elements: " << nelements << endl;
 
 // its better to separate fdm grid with continuous axes
@@ -105,14 +106,24 @@ int main(int argc, char *argv[]){
 
 	cout << "Filling state 0..."; fflush(stdout);
 	fillInitialCondition(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    fillGhostPoints(a, F, G, 0, M, N, O);
+
 	cout << " done." << endl;
 
     cout << "Filling state 1..."; fflush(stdout);
 	fillInitialCondition(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    fillGhostPoints(a, F, G, 1, M, N, O);
+
 	cout << " done." << endl;
+
+    writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
+    cout << "Written" << endl;
+    getchar();
 
 	cout << "Filling state 2..."; fflush(stdout);
 	computeFirstIteration(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    fillGhostPoints(a, F, G, 2, M, N, O);
+
 	cout << " done." << endl;
 
     writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
@@ -130,7 +141,8 @@ int main(int argc, char *argv[]){
 		cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
 
 		computeNextIteration(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-        
+        fillGhostPoints(a, F, G, t, M, N, O);
+
 
 		cout << "Finished iteration l=" << l << endl;
 
