@@ -75,6 +75,7 @@ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t 
 } 
 
 void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
+	
 	#pragma omp parallel for schedule(dynamic) num_threads(10)
 	for(size_t m=0; m<M; m++){
 		cout << m << endl;
@@ -118,68 +119,19 @@ void fillDirichletBoundary(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t
 		for(size_t theta=0; theta<N; theta++){
 			for(size_t phi=0; phi<O; phi++){
 				if (r == 0 || r == M-1 ){
-					a[I(l, r, theta, phi)] = a_0[r];
-					F[I(l, r, theta, phi)] = q*(dtheta*theta);
-					G[I(l, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi);
+					a[I(l, r, theta, phi)] = a_0[r] + PI_1;
+					F[I(l, r, theta, phi)] = q*(dtheta*theta) + PI_2;
+					G[I(l, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
 				} else if (theta == 0 || theta == N-1 ){
-					a[I(l, r, theta, phi)] = a_0[r];
-					F[I(l, r, theta, phi)] = q*(dtheta*theta);
-					G[I(l, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi);
+					a[I(l, r, theta, phi)] = a_0[r] + PI_1;
+					F[I(l, r, theta, phi)] = q*(dtheta*theta) + PI_2;
+					G[I(l, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
 				} else if (phi == 0 || phi == O-1 ){
-					a[I(l, r, theta, phi)] = a_0[r];
-					F[I(l, r, theta, phi)] = q*(dtheta*theta);
-					G[I(l, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi);
+					a[I(l, r, theta, phi)] = a_0[r] + PI_1;
+					F[I(l, r, theta, phi)] = q*(dtheta*theta) + PI_2;
+					G[I(l, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
 				}
 			}
 		}
-	} /*
-	#pragma omp parallel for schedule(dynamic) num_threads(10)
-	for(size_t n=0; n<N; n++){
-		for(size_t o=0; o<O; o++){
-			a[I(l, 0, n, o)] = a_0[0] + PI_1;
-			F[I(l, 0, n, o)] = (REAL)q*(dtheta*(REAL)n) + PI_2;
-			G[I(l, 0, n, o)] = p*((dt*l)/L - dphi*o) + PI_3;
-		}
 	}
-	#pragma omp parallel for schedule(dynamic) num_threads(10)
-	for(size_t m=0; m<M; m++){
-		for(size_t o=0; o<O; o++){
-			a[I(l, m, 0, o)] = a_0[m] + PI_1;
-			F[I(l, m, 0, o)] = (REAL)q*(dtheta*(REAL)0) + PI_2;
-			G[I(l, m, 0, o)] = p*((dt*l)/L - dphi*o) + PI_3;
-		}
-	}
-	#pragma omp parallel for schedule(dynamic) num_threads(10)
-	for(size_t m=0; m<M; m++){
-		for(size_t n=0; n<N; n++){
-			a[I(l, m, n, 0)] = a_0[m] + PI_1;
-			F[I(l, m, n, 0)] = (REAL)q*(dtheta*(REAL)n) + PI_2;
-			G[I(l, m, n, 0)] = p*((dt*l)/L - dphi*0) + PI_3;
-		}
-	}
-	#pragma omp parallel for schedule(dynamic) num_threads(10)
-	for(size_t n=0; n<N; n++){
-		for(size_t o=0; o<O; o++){
-			a[I(l, M-1, n, o)] = a_0[M-1] + PI_1;
-			F[I(l, M-1, n, o)] = (REAL)q*(dtheta*(REAL)n) + PI_2;
-			G[I(l, M-1, n, o)] = p*((dt*l)/L - dphi*o) + PI_3;
-		}
-	}
-	
-	#pragma omp parallel for schedule(dynamic) num_threads(10)
-	for(size_t m=0; m<M; m++){
-		for(size_t o=0; o<O; o++){
-			a[I(l, m, N-1, o)] = a_0[m] + PI_1;
-			F[I(l, m, N-1, o)] = (REAL)q*(dtheta*(REAL)(N-1)) + PI_2;
-			G[I(l, m, N-1, o)] = p*((dt*l)/L - dphi*o) + PI_3;
-		}
-	}
-	#pragma omp parallel for schedule(dynamic) num_threads(10)
-	for(size_t m=0; m<M; m++){
-		for(size_t n=0; n<N; n++){
-			a[I(l, m, n, O-1)] = a_0[m] + PI_1;
-			F[I(l, m, n, O-1)] = (REAL)q*(dtheta*(REAL)n) + PI_2;
-			G[I(l, m, n, O-1)] = p*((dt*l)/L - dphi*(O-1)) + PI_3;
-		}
-	}*/
 }
