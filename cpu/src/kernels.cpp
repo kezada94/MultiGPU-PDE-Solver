@@ -10,25 +10,25 @@ void fillGhostPoints(REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, si
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t n=0; n<N+2; n++){
 		for(size_t o=0; o<O+2; o++){
-			a[(t)*M*N*O + (0)*N*O + (n)*O + o] = a[(t)*M*N*O + (2)*N*O + (n)*O + o];
-			F[(t)*M*N*O + (0)*N*O + (n)*O + o] = F[(t)*M*N*O + (2)*N*O + (n)*O + o];
-			G[(t)*M*N*O + (0)*N*O + (n)*O + o] = G[(t)*M*N*O + (2)*N*O + (n)*O + o];
+			a[E(t, 0, n, o)] = a[E(t, 2, n, o)];
+			F[E(t, 0, n, o)] = F[E(t, 2, n, o)];
+			G[E(t, 0, n, o)] = G[E(t, 2, n, o)];
 		}
 	}
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t m=0; m<M+2; m++){
 		for(size_t o=0; o<O+2; o++){
-			a[(t)*M*N*O + (m)*N*O + (0)*O + o] = a[(t)*M*N*O + (m)*N*O + (2)*O + o];
-			F[(t)*M*N*O + (m)*N*O + (0)*O + o] = F[(t)*M*N*O + (m)*N*O + (2)*O + o];
-			G[(t)*M*N*O + (m)*N*O + (0)*O + o] = G[(t)*M*N*O + (m)*N*O + (2)*O + o];
+			a[E(t, m, 0, o)] = a[E(t, m, 2, o)];
+			F[E(t, m, 0, o)] = F[E(t, m, 2, o)];
+			G[E(t, m, 0, o)] = G[E(t, m, 2, o)];
 		}
 	}	
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t m=0; m<M+2; m++){
 		for(size_t n=0; n<N+2; n++){
-			a[(t)*M*N*O + (m)*N*O + (n)*O + 0] = a[(t)*M*N*O + (m)*N*O + (n)*O + 2];
-			F[(t)*M*N*O + (m)*N*O + (n)*O + 0] = a[(t)*M*N*O + (m)*N*O + (n)*O + 2];
-			G[(t)*M*N*O + (m)*N*O + (n)*O + 0] = a[(t)*M*N*O + (m)*N*O + (n)*O + 2];
+			a[E(t, m, n, 0)] = a[E(t, m, n, 2)];
+			F[E(t, m, n, 0)] = F[E(t, m, n, 2)];
+			G[E(t, m, n, 0)] = G[E(t, m, n, 2)];
 		}
 	}
 
@@ -36,25 +36,25 @@ void fillGhostPoints(REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, si
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t n=0; n<N+2; n++){
 		for(size_t o=0; o<O+2; o++){
-			a[(t)*M*N*O + (M+1)*N*O + (n)*O + o] = a[(t)*M*N*O + (M-1)*N*O + (n)*O + o];
-			F[(t)*M*N*O + (M+1)*N*O + (n)*O + o] = a[(t)*M*N*O + (M-1)*N*O + (n)*O + o];
-			G[(t)*M*N*O + (M+1)*N*O + (n)*O + o] = a[(t)*M*N*O + (M-1)*N*O + (n)*O + o];
+			a[E(t, M+1, n, o)] = a[E(t, M-1, n, o)];
+			F[E(t, M+1, n, o)] = F[E(t, M-1, n, o)];
+			G[E(t, M+1, n, o)] = G[E(t, M-1, n, o)];
 		}
 	}
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t m=0; m<M+2; m++){
 		for(size_t o=0; o<O+2; o++){
-			a[(t)*M*N*O + (m)*N*O + (N+1)*O + o] = a[(t)*M*N*O + (m)*N*O + (N-1)*O + o];
-			F[(t)*M*N*O + (m)*N*O + (N+1)*O + o] = a[(t)*M*N*O + (m)*N*O + (N-1)*O + o];
-			G[(t)*M*N*O + (m)*N*O + (N+1)*O + o] = a[(t)*M*N*O + (m)*N*O + (N-1)*O + o];
+			a[E(t, m, N+1, o)] = a[E(t, m, N-1, o)];
+			F[E(t, m, N+1, o)] = F[E(t, m, N-1, o)];
+			G[E(t, m, N+1, o)] = G[E(t, m, N-1, o)];
 		}
 	}	
 	#pragma omp parallel for schedule(static) num_threads(10)
 	for(size_t m=0; m<M+2; m++){
 		for(size_t n=0; n<N+2; n++){
-			a[(t)*M*N*O + (m)*N*O + (n)*O + O+1] = a[(t)*M*N*O + (m)*N*O + (n)*O + O-1];
-			F[(t)*M*N*O + (m)*N*O + (n)*O + O+1] = a[(t)*M*N*O + (m)*N*O + (n)*O + O-1];
-			G[(t)*M*N*O + (m)*N*O + (n)*O + O+1] = a[(t)*M*N*O + (m)*N*O + (n)*O + O-1];
+			a[E(t, m, n, O+1)] = a[E(t, m, n, O-1)];
+			F[E(t, m, n, O+1)] = F[E(t, m, n, O-1)];
+			G[E(t, m, n, O+1)] = G[E(t, m, n, O-1)];
 		}
 	}
 }
