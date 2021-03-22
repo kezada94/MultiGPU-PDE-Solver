@@ -44,8 +44,8 @@ vector<REAL> genLinspace(REAL start, REAL end, size_t n){
 
 int main(int argc, char *argv[]){
 
-    if (argc != 8){
-        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n>\n");
+    if (argc != 9){
+        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n> <boundary>\n");
         exit(1);
     }
 
@@ -58,6 +58,7 @@ int main(int argc, char *argv[]){
     int p = atoi(argv[5]);
     int q = atoi(argv[6]);
     int n = atoi(argv[7]);
+    bool boundary = atoi(argv[8]);
 
     vector<REAL> ax_r = genLinspace(0, 2*PI, M); // for r
     vector<REAL> ax_theta = genLinspace(0, PI, N); // for r
@@ -106,13 +107,21 @@ int main(int argc, char *argv[]){
 
 	cout << "Filling state 0..."; fflush(stdout);
 	fillInitialCondition(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-    fillGhostPoints(a, F, G, 0, M, N, O);
+	if (boundary == 0){
+		fillDirichletBoundary(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+	} else if (boundary == 1){
+    	fillGhostPoints(a, F, G, 0, M, N, O);
+	} 
 
 	cout << " done." << endl;
 
     cout << "Filling state 1..."; fflush(stdout);
 	fillInitialCondition(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-    fillGhostPoints(a, F, G, 1, M, N, O);
+	if (boundary == 0){
+		fillDirichletBoundary(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+	} else if (boundary == 1){
+    	fillGhostPoints(a, F, G, 1, M, N, O);
+	} 
 
 	cout << " done." << endl;
 
@@ -122,7 +131,11 @@ int main(int argc, char *argv[]){
 
 	cout << "Filling state 2..."; fflush(stdout);
 	computeFirstIteration(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-    fillGhostPoints(a, F, G, 2, M, N, O);
+	if (boundary == 0){
+		fillDirichletBoundary(a, F, G, 2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+	} else if (boundary == 1){
+    	fillGhostPoints(a, F, G, 2, M, N, O);
+	} 
 
 	cout << " done." << endl;
 
@@ -141,7 +154,11 @@ int main(int argc, char *argv[]){
 		cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
 
 		computeNextIteration(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-        fillGhostPoints(a, F, G, t, M, N, O);
+		if (boundary == 0){
+			fillDirichletBoundary(a, F, G, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+		} else if (boundary == 1){
+        	fillGhostPoints(a, F, G, t, M, N, O);
+		} 
 
 
 		cout << "Finished iteration l=" << l << endl;
