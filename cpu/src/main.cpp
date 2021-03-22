@@ -181,9 +181,9 @@ static MatrixXcd t3 = [] {
     return matrix;
 }();
 MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
-    REAL anow = a[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
-    REAL Fnow = F[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
-    REAL Gnow = G[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
+    REAL anow = a[I(t, r, theta, phi)];
+    REAL Fnow = F[I(t, r, theta, phi)];
+    REAL Gnow = G[I(t, r, theta, phi)];
     REAL n1 = sin(Fnow)*cos(Gnow);
     REAL n2 = sin(Fnow)*sin(Gnow);
     REAL n3 = cos(Fnow);
@@ -191,9 +191,9 @@ MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size
     return U;
 }
 MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
-    REAL anow = a[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
-    REAL Fnow = F[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
-    REAL Gnow = G[(t)*M*N*O + (r)*N*O + (theta)*O + phi];
+    REAL anow = a[I(t, r, theta, phi)];
+    REAL Fnow = F[I(t, r, theta, phi)];
+    REAL Gnow = G[I(t, r, theta, phi)];
     REAL n1 = sin(Fnow)*cos(Gnow);
     REAL n2 = sin(Fnow)*sin(Gnow);
     REAL n3 = cos(Fnow);
