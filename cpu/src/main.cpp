@@ -116,7 +116,7 @@ int main(int argc, char *argv[]){
 	cout << " done." << endl;
 
     cout << "Filling state 1..."; fflush(stdout);
-	fillInitialCondition(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+	computeFirstIteration(a, F, G, 1, 1, 0, -1, -2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	if (boundary == 0){
 		fillDirichletBoundary(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	} else if (boundary == 1){
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]){
     getchar();
 
 	cout << "Filling state 2..."; fflush(stdout);
-	computeFirstIteration(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+	computeSecondIteration(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	if (boundary == 0){
 		fillDirichletBoundary(a, F, G, 2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	} else if (boundary == 1){

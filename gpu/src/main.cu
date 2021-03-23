@@ -75,11 +75,11 @@ int main(int argc, char *argv[]){
 // its better to separate fdm grid with continuous axes
 	cout << "Generating grids..."; fflush(stdout);
     REAL *a;
-	cudaMallocManaged(&a, nelements*sizeof(REAL));
+	cudaMalloc(&a, nelements*sizeof(REAL));
     REAL *F;
-	cudaMallocManaged(&F, nelements*sizeof(REAL));
+	cudaMalloc(&F, nelements*sizeof(REAL));
     REAL *G;
-	cudaMallocManaged(&G, nelements*sizeof(REAL));
+	cudaMalloc(&G, nelements*sizeof(REAL));
 	cout << "done" << endl;
     cout << "Reading values for a(r)...";fflush(stdout);
 

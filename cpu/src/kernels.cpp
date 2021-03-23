@@ -91,6 +91,23 @@ void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t
 
 } 
 
+void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
+	
+	#pragma omp parallel for schedule(dynamic) num_threads(10)
+	for(size_t r=0; r<M; r++){
+		cout << r << endl;
+		for(size_t theta=0; theta<N; theta++){
+			for(size_t phi=0; phi<O; phi++){
+				a[I(l, r, theta, phi)] = computeSeconda(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				F[I(l, r, theta, phi)] = computeSecondF(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				G[I(l, r, theta, phi)] = computeSecondG(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+			}
+		}
+	}
+
+
+} 
+
 std::fstream& gotoLine(std::fstream& file, unsigned int num){
     file.seekg(std::ios::beg);
     for(int i=0; i < num - 1; ++i){
