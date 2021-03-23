@@ -77,13 +77,13 @@ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t 
 void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	
 	#pragma omp parallel for schedule(dynamic) num_threads(10)
-	for(size_t m=0; m<M; m++){
-		cout << m << endl;
-		for(size_t n=0; n<N; n++){
-			for(size_t o=0; o<O; o++){
-				a[I(t, m, n, o)] = computeFirsta(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-				F[I(t, m, n, o)] = computeFirstF(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-				G[I(t, m, n, o)] = computeFirstG(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+	for(size_t r=0; r<M; r++){
+		cout << r << endl;
+		for(size_t theta=0; theta<N; theta++){
+			for(size_t phi=0; phi<O; phi++){
+				a[I(l, r, theta, phi)] = computeFirsta(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				F[I(l, r, theta, phi)] = computeFirstF(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				G[I(l, r, theta, phi)] = computeFirstG(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
 			}
 		}
 	}
@@ -101,12 +101,12 @@ std::fstream& gotoLine(std::fstream& file, unsigned int num){
 
 void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	#pragma omp parallel for schedule(dynamic) num_threads(10)
-	for(size_t m=0; m<M; m++){
-		for(size_t n=0; n<N; n++){
-			for(size_t o=0; o<O; o++){
-				a[I(l, m, n, o)] = a_0[m] + PI_1;
-				F[I(l, m, n, o)] = (REAL)q*(dtheta*(REAL)n) + PI_2;
-				G[I(l, m, n, o)] = p*((dt*l)/L - dphi*o) + PI_3;
+	for(size_t r=0; r<M; r++){
+		for(size_t theta=0; theta<N; theta++){
+			for(size_t phi=0; phi<O; phi++){
+				a[I(l, r, theta, phi)] = a_0[r] + PI_1;
+				F[I(l, r, theta, phi)] = (REAL)q*(dtheta*(REAL)theta) + PI_2;
+				G[I(l, r, theta, phi)] = p*((dt*l)/L - dphi*phi) + PI_3;
 			}
 		}
 	}
