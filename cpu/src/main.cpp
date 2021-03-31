@@ -226,27 +226,27 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
     MatrixXcd L_1 = Um1*((getU(a, F, G, t, r+1, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/(2*dr)); 
     MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta+1, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/(2*dtheta));
     MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi+1, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/(2*dphi)); 
-    REAL K = 4970.25;
-    //REAL K = 2.0;
+    //REAL K = 4970.25;
+    REAL K = 2.0;
     complex<double> cons = -K/2.0f;
-    REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(-1.0*L_0*L_0 + 0*L_1*L_1 + 0*L_2*L_2 + 0*L_3*L_3)).trace()).real();/*
-                        + lambda/4.0*(-1.0*getF(L_0, L_0)*getF(L_0, L_0)
-                                    +l_1*getF(L_0, L_1)*getF(L_0, L_1)
-                                    +l_1*getF(L_0, L_2)*getF(L_0, L_2)
-                                    +l_2*getF(L_0, L_3)*getF(L_0, L_3)
-                            	    -(-1.0/4.0*(-1.0*getF(L_0, L_1)*getF(L_0, L_1)
-                                        	-1.0*getF(L_0, L_2)*getF(L_0, L_2)
-                                        	-1.0*getF(L_0, L_3)*getF(L_0, L_3)
-                                        	-1.0*getF(L_1, L_0)*getF(L_1, L_0)
-                                        	-1.0*getF(L_2, L_0)*getF(L_2, L_0)
-                                        	-1.0*getF(L_3, L_0)*getF(L_3, L_0)
-                                        	+l_1*l_1*getF(L_1, L_2)*getF(L_1, L_2)
-                                        	+l_1*l_1*getF(L_2, L_1)*getF(L_2, L_1)
-                                        	+l_1*l_2*getF(L_1, L_3)*getF(L_1, L_3)
-                                        	+l_1*l_2*getF(L_3, L_1)*getF(L_3, L_1)
-                                        	+l_2*l_1*getF(L_2, L_3)*getF(L_2, L_3)
-                                        	+l_2*l_1*getF(L_3, L_2)*getF(L_3, L_2))) )).trace()).real();*/
-    //return a[I(t, r, theta, phi)];//t00;
+    REAL t00 = ((cons)*(L_0*L_0 - 0*1.0/2.0*-1.0*(L_0*L_0 + L_1*L_1 + L_2*L_2 +L_3*L_3)//).trace()).real();
+                        + 0*lambda/4.0*(-1.0*getF(L_0, L_0)*getF(L_0, L_0)
+                                    +getF(L_0, L_1)*getF(L_0, L_1)
+                                    +getF(L_0, L_2)*getF(L_0, L_2)
+                                    +getF(L_0, L_3)*getF(L_0, L_3)
+                            	    -(-1.0/4.0*(getF(L_0, L_1)*getF(L_0, L_1)
+                                        	+getF(L_0, L_2)*getF(L_0, L_2)
+                                        	+getF(L_0, L_3)*getF(L_0, L_3)
+                                        	+getF(L_1, L_0)*getF(L_1, L_0)
+                                        	+getF(L_2, L_0)*getF(L_2, L_0)
+                                        	+getF(L_3, L_0)*getF(L_3, L_0)
+                                        	+getF(L_1, L_2)*getF(L_1, L_2)
+                                        	+getF(L_2, L_1)*getF(L_2, L_1)
+                                        	+getF(L_1, L_3)*getF(L_1, L_3)
+                                        	+getF(L_3, L_1)*getF(L_3, L_1)
+                                        	+getF(L_2, L_3)*getF(L_2, L_3)
+                                        	+getF(L_3, L_2)*getF(L_3, L_2))) )).trace()).real();
+    //return G[I(t, r, theta, phi)];//t00;
     return t00;
 
 
@@ -265,13 +265,13 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
             for (size_t o=1; o<O-1; o=round(oo)){
                 if (file.is_open()){
 					cout << m << ", " << n << ", " << o << endl;
-                    file <<std::fixed << std::setprecision(15) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda) << "\n";
+                    file <<std::fixed << std::setprecision(62) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda) << "\n";
                     file.flush();
                 }
                 else{
                     std::cerr << "didn't write" << std::endl;
                 }
-                oo += (double)(O-3)/19.0;
+                oo += (double)(O-3)/14.0;
             }
             nn += (double)(N-3)/99.0;
         }
