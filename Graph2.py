@@ -22,25 +22,25 @@ q = sys.argv[3]
 t = int(sys.argv[4])
 _M = str(M)
 Z = np.genfromtxt("result2-"+str(n)+"-"+str(q)+"-"+_M+".dat", delimiter="\n")
-Z = Z.reshape((-1, 100, 100, 10))
+Z = Z.reshape((-1, 100, 100, 20))
 
 L = Z.shape[0]
 print(Z.shape)
 
-data = Z[t, 1:, 1:, -2:]
-interr = (data - (data.min()))
+data = Z[t, :, :, :]
+interr = data#(data - (data.min()))
 print("T00 maximo:", data.max())
 print("T00 minimo:", data.min())
 scale = (interr )#np.clip(interr, 0, interr.max())
-#positive = (np.clip(scale, 0.0000, scale.max()))#np.clip(interr, 0, interr.max())
-#negative = (np.clip(-scale, 0.0000, -scale.min()))
+positive = (np.clip(scale, 0.0000, scale.max()))#np.clip(interr, 0, interr.max())
+negative = (np.clip(-scale, 0.0000, -scale.min()))
 d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
-#d2[..., 0] = positive/positive.max() * (255.)
-#d2[..., 1] = negative/negative.max() * (255.)
-d2[..., 0] = scale/scale.max() * (255.)
-d2[..., 1] = scale/scale.max() * (255.)
-d2[..., 2] = 255 - scale/scale.max() * (255.)
-d2[..., 3] = 255
+d2[..., 0] = positive/positive.max() * (255.)
+d2[..., 1] = negative/negative.max() * (255.)
+#d2[..., 0] = scale/scale.max() * (255.)
+#d2[..., 1] = scale/scale.max() * (255.)
+d2[..., 2] = 255# - scale/scale.max() * (255.)
+d2[..., 3] = 20
 d2[:, 0, 0] = [255,0,0,250]
 d2[0, :, 0] = [0,255,0,250]
 d2[0, 0, :] = [0,0,255,250]
