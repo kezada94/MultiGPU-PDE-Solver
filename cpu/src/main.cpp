@@ -45,8 +45,8 @@ vector<REAL> genLinspace(REAL start, REAL end, size_t n){
 
 int main(int argc, char *argv[]){
 
-    if (argc != 9){
-        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n> <boundary>\n");
+    if (argc != 10){
+        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n> <niter> <boundary>\n");
         exit(1);
     }
 
@@ -58,12 +58,9 @@ int main(int argc, char *argv[]){
     int p = atoi(argv[5]);
     int q = atoi(argv[6]);
     int n = atoi(argv[7]);
-    bool boundary = atoi(argv[8]);
-    size_t L = n;
+    bool boundary = atoi(argv[9]);
+    size_t niter = atoi(argv[8]);
 
-    vector<REAL> ax_r = genLinspace(0, 2*PI, M); // for r
-    vector<REAL> ax_theta = genLinspace(0, PI, N); // for r
-    vector<REAL> ax_phi = genLinspace(0, 2*PI, O); // for r
 
     REAL dr = 2*PI/999.0;
     REAL dtheta = PI/999.0;
@@ -83,7 +80,7 @@ int main(int argc, char *argv[]){
     cout << "Reading values for a(r)...";fflush(stdout);
     REAL *a_0 = new REAL[M];
     int i = 0;
-	fstream file("../alfa(r)-"+to_string(p)+"-"+to_string(q)+"-1000.csv");
+	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-1000.csv");
     if (file.is_open()){
         string line;
         while(getline(file, line)){
@@ -154,7 +151,7 @@ int main(int argc, char *argv[]){
     getchar();
 
 
-    for (size_t l=3; l<L; ++l){
+    for (size_t l=3; l<niter; ++l){
 	cout << "Starting iteration l=" << l << endl;
 	size_t t = l%buffSize;
 	size_t tm1 = (l-1)%buffSize;
@@ -175,7 +172,7 @@ int main(int argc, char *argv[]){
 
 	//cout << "Save? [y/n]" << endl;
 	//char key = getchar();
-	if (l%5==0){
+	if (l%10==0){
 	    cout << "Saving values..." << endl;
 	    writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
 	    writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
