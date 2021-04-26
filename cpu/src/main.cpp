@@ -23,7 +23,7 @@ const size_t nfunctions= 3;
 
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
-REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda);
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual);
 MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getL_0(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
@@ -31,13 +31,14 @@ MatrixXcd getL_1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, si
 MatrixXcd getL_2(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 MatrixXcd getL_3(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 
-void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda);
+void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual);
 
 vector<REAL> genLinspace(REAL start, REAL end, size_t n){
 	vector<REAL> vec = vector<REAL>(n);
 	REAL delta = (end - start)/(n-1);
 	for(size_t i=0; i<n; ++i){
 		vec[i] = start + i*delta;
+		cout << vec[i] << endl;
 	}
 	return vec;
 }
@@ -49,7 +50,6 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    const size_t L = 999999;
     const size_t M = atoi(argv[2]);
     const size_t N = atoi(argv[3]);
     const size_t O = atoi(argv[4]);
@@ -59,14 +59,15 @@ int main(int argc, char *argv[]){
     int q = atoi(argv[6]);
     int n = atoi(argv[7]);
     bool boundary = atoi(argv[8]);
+    size_t L = n;
 
     vector<REAL> ax_r = genLinspace(0, 2*PI, M); // for r
     vector<REAL> ax_theta = genLinspace(0, PI, N); // for r
     vector<REAL> ax_phi = genLinspace(0, 2*PI, O); // for r
 
-    REAL dr = ax_r[1] - ax_r[0];
-    REAL dtheta = ax_theta[1] - ax_theta[0];
-    REAL dphi = ax_phi[1] - ax_phi[0];
+    REAL dr = 2*PI/999.0;
+    REAL dtheta = PI/999.0;
+    REAL dphi = 2*PI/999.0;
 
     // +2 for ghost points offset
 	size_t nelements = buffSize*(M+2)*(N+2)*(O+2);
@@ -82,7 +83,7 @@ int main(int argc, char *argv[]){
     cout << "Reading values for a(r)...";fflush(stdout);
     REAL *a_0 = new REAL[M];
     int i = 0;
-	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-1000.csv");
+	fstream file("../alfa(r)-"+to_string(p)+"-"+to_string(q)+"-1000.csv");
     if (file.is_open()){
         string line;
         while(getline(file, line)){
@@ -102,6 +103,9 @@ int main(int argc, char *argv[]){
     REAL l_2 = 1.f;
 
     string filename = "result-"+to_string(M)+".dat";
+    string filename0 = "result-"+to_string(M)+"-A.dat";
+    string filename1 = "result-"+to_string(M)+"-F.dat";
+    string filename2 = "result-"+to_string(M)+"-G.dat";
 
 	
 
@@ -113,10 +117,14 @@ int main(int argc, char *argv[]){
 	    fillGhostPoints(a, F, G, 0, M, N, O);
     } 
     cout << " done." << endl;
+    writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+    cout << "Written" << endl;
 
     cout << "Filling state 1..."; fflush(stdout);
-    //fillInitialCondition(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-    computeFirstIteration(a, F, G, 1, 1, 0, -1, -2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    fillInitialCondition(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    //computeFirstIteration(a, F, G, 1, 1, 0, -1, -2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     if (boundary == 0){
 	    fillDirichletBoundary(a, F, G, 1, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     } else if (boundary == 1){
@@ -124,7 +132,9 @@ int main(int argc, char *argv[]){
     } 
     cout << " done." << endl;
 
-    writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
+    writeTimeSnapshot(filename0, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    writeTimeSnapshot(filename1, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    writeTimeSnapshot(filename2, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
     getchar();
 
@@ -137,7 +147,9 @@ int main(int argc, char *argv[]){
     } 
 
 
-    writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
+    writeTimeSnapshot(filename0, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    writeTimeSnapshot(filename1, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    writeTimeSnapshot(filename2, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
     getchar();
 
@@ -161,13 +173,15 @@ int main(int argc, char *argv[]){
 
 	cout << "Finished iteration l=" << l << endl;
 
-	cout << "Save? [y/n]" << endl;
-	char key = getchar();
-	if (key == 'y'){
+	//cout << "Save? [y/n]" << endl;
+	//char key = getchar();
+	if (l%5==0){
 	    cout << "Saving values..." << endl;
-	    writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda);
+	    writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+	    writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+	    writeTimeSnapshot(filename2, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
 	    cout << "done." << endl;
-	    getchar();
+	    //getchar();
 	}
 }
 	
@@ -220,16 +234,16 @@ MatrixXcd getF(MatrixXcd L1, MatrixXcd L2){
     return (L1*L2 - L2*L1);
 }
 
-REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda){
+REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual){
     MatrixXcd Um1 = getUm1(a, F, G, t, r, theta, phi, M, N, O);
     MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, tm1, r, theta, phi, M, N, O))/dt); 
-    MatrixXcd L_1 = Um1*((getU(a, F, G, t, r+1, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/(2*dr)); 
-    MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta+1, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/(2*dtheta));
-    MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi+1, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/(2*dphi)); 
+    MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/(dr)); 
+    MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/(dtheta));
+    MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/(dphi)); 
     //REAL K = 4970.25;
     REAL K = 2.0;
     complex<double> cons = -K/2.0f;
-    REAL t00 = ((cons)*(L_0*L_0 - 0*1.0/2.0*-1.0*(L_0*L_0 + L_1*L_1 + L_2*L_2 +L_3*L_3)//).trace()).real();
+    REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(L_0*L_0 + 0*L_1*L_1 +0*L_2*L_2 +0*L_3*L_3)//).trace()).real();
                         + 0*lambda/4.0*(-1.0*getF(L_0, L_0)*getF(L_0, L_0)
                                     +getF(L_0, L_1)*getF(L_0, L_1)
                                     +getF(L_0, L_2)*getF(L_0, L_2)
@@ -246,36 +260,42 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
                                         	+getF(L_3, L_1)*getF(L_3, L_1)
                                         	+getF(L_2, L_3)*getF(L_2, L_3)
                                         	+getF(L_3, L_2)*getF(L_3, L_2))) )).trace()).real();
-    //return G[I(t, r, theta, phi)];//t00;
+	if (cual == 0){
+    	return a[I(t, r, theta, phi)];//t00;
+	} else if (cual == 1){
+		return F[I(t, r, theta, phi)];//t00;
+	} else if (cual == 2){
+    	return G[I(t, r, theta, phi)];//t00;
+	}
     return t00;
 
 
 }
-void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda){
+void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual){
     int count = 0;
     ofstream file;
-    file.open(filename);
-    //file.open(filename, std::ofstream::app);
-    double mm = 1;
-    for (size_t m=1; m<M-1; m=round(mm)){
+    //file.open(filename);
+    file.open(filename, std::ofstream::app);
+    double mm = 0;
+    for (size_t m=0; m<M; m=round(mm)){
     	cout << m << endl;
-        double nn = 1;
-            for (size_t n=1; n<N-1; n=round(nn)){
-            double oo = 1;
-            for (size_t o=1; o<O-1; o=round(oo)){
+        double nn = 0;
+            for (size_t n=0; n<N; n=round(nn)){
+            double oo = 0;
+            for (size_t o=0; o<O; o=round(oo)){
                 if (file.is_open()){
 					cout << m << ", " << n << ", " << o << endl;
-                    file <<std::fixed << std::setprecision(62) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda) << "\n";
+                    file <<std::fixed << std::setprecision(62) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, cual) << "\n";
                     file.flush();
                 }
                 else{
                     std::cerr << "didn't write" << std::endl;
                 }
-                oo += (double)(O-3)/14.0;
+                oo += (double)(O-1)/9.0;
             }
-            nn += (double)(N-3)/99.0;
+            nn += (double)(N-1)/99.0;
         }
-        mm += (double)(M-3)/99.0;
+        mm += (double)(M-1)/99.0;
     }
     file.close();
 
