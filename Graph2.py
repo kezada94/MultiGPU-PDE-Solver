@@ -118,9 +118,15 @@ def update():
         for j in range(data.shape[1]):
             for k in range(data.shape[2]):
                 if t==1:
-                    err += (1.0*(dj*(j)) - data[i, j, k])**2
+                    err += abs(1.0*(dj*(j)) - data[i, j, k])
                 elif t==2:
-                    err += (25.0*(0.00001*(l) - dk*(k)) - data[i, j, k])**2
+                    if l<3:
+                        #print(data[i, j, k], 1.0*(0.00001*(l-2)*10 - dk*(k)))
+                        err += abs(1.0*(0.00001*(l) - dk*(k)) - data[i, j, k])
+                    else:
+                        #print(data[i, j, k], 1.0*(0.00001*(l) - dk*(k)))
+                        err += abs(1.0*(0.00001*(l-3)*10 - dk*(k)) - data[i, j, k])
+
     print(err)
     
 
