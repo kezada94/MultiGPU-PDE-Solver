@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
     int q = atoi(argv[6]);
     int n = atoi(argv[7]);
     int nGPU = atoi(argv[8]);
-    int GPUWidth = atoi(argv[9]);
+    size_t GPUWidth = atoi(argv[9]);
     bool boundary = atoi(argv[11]);
     size_t niter = atoi(argv[10]);
 
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]){
 
 
     cout << "Reading values for a(r)...";fflush(stdout);
-    REAL *a_0 new REAL[M];
+    REAL *a_0 = new REAL[M];
     int i = 0;
 	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-"+to_string(M)+".csv");
     if (file.is_open()){
@@ -106,14 +106,14 @@ int main(int argc, char *argv[]){
     cout << "Filling state 0..."; fflush(stdout);
 
     #pragma omp parallel for
-    for(int w=0; w<(O+GPUWidth-1)/GPUWidth; w++){
+    for(size_t w=0; w<(O+GPUWidth-1)/GPUWidth; w++){
         cudaSetDevice(omp_get_thread_num());
         REAL *da_0;
         cudaMalloc(&da_0, M*sizeof(REAL));
         cudaMemcpy(da_0, a_0, M*sizeof(REAL), cudaMemcpyDeviceToHost);
 
-        size_t nelements_slice = (M+GHOST_SIZE)*(N+GHOST_SIZE)*(GPUWidth+GHOST_SIZE)*4
-        REAL* a_slice, F_slice, G_slice;
+        size_t nelements_slice = (M+GHOST_SIZE)*(N+GHOST_SIZE)*(GPUWidth+GHOST_SIZE)*4;
+        REAL* a_slice, *F_slice, *G_slice;
 
         cudaMalloc(&a_slice, nelements_slice*sizeof(REAL));
         cudaMalloc(&F_slice, nelements_slice*sizeof(REAL));
