@@ -2,11 +2,11 @@
 #include "defines.h"
 #include <cuda.h>
 
-
+/*
 #include "EquationAlfa.cuh"
 #include "EquationF.cuh"
 #include "EquationG.cuh"
-
+*/
 
 
 __global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, size_t phi_offset, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q, int L, REAL* a_0){
@@ -25,7 +25,7 @@ __global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t
 	}
 } 
 
-
+/*
 
 void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_t t, size_t tm1, size_t tm2, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	dim3 g, b;
@@ -117,7 +117,7 @@ __global__ void fillGhostPoints(REAL* a, REAL* F, REAL *G, size_t t, size_t M, s
 			F[E(t, m, n, O+1)] = F[E(t, m, n, O-1)];
 			G[E(t, m, n, O+1)] = G[E(t, m, n, O-1)];
 		}
-	}*/
+	}
 }
 
 __global__ void fillDirichletBoundary(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
@@ -138,3 +138,4 @@ __global__ void fillDirichletBoundary(REAL* a, REAL* F, REAL *G, size_t l, size_
 		G[I(t, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
 	}
 }
+*/

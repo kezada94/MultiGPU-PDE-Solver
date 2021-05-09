@@ -147,7 +147,7 @@ int main(int argc, char *argv[]){
     exit(4);
 
 
-
+/*
 
 
     cout << "Filling state 1..."; fflush(stdout);
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]){
 	}
 }
 	
-    //Boundary filll
+    //Boundary filll*/
     return 0;
 }
 
