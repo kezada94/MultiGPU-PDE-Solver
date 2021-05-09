@@ -41,8 +41,6 @@ print(data.shape)
 
 
 interr = (data - (data.min()))
-print("Valor maximo:", data.max())
-print("T00 minimo:", data.min())
 scale = (interr )#np.clip(interr, 0, interr.max())
 positive = (np.clip(scale, 0.0000, scale.max()))#np.clip(interr, 0, interr.max())
 negative = (np.clip(-scale, 0.0000, -scale.min()))
@@ -138,7 +136,7 @@ def update():
 
 pop = QtCore.QTimer()
 pop.timeout.connect(update)
-pop.start(100)
+pop.start(1000)
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
