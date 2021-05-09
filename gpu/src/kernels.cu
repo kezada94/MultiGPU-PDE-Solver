@@ -9,16 +9,19 @@
 
 
 
-__global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q, int L, REAL* a_0){
+__global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, size_t phi_offset, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL bigl, int p, int q, int L, REAL* a_0){
 
 	int r = blockIdx.x*blockDim.x + threadIdx.x;
 	int theta = blockIdx.y*blockDim.y + threadIdx.y;
 	int phi = blockIdx.z*blockDim.z + threadIdx.z;
 
-	if (r<M || theta<N || phi<O){
-		a[I(l, r, theta, phi)] = a_0[r] + PI_1;
-		F[I(l, r, theta, phi)] = q*(dtheta*theta) + PI_2;
-		G[I(l, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
+
+	if (r<M && theta<N && phi<O){
+		int global_phi = phi + phi_offset;
+
+		a[I(l, phi, theta, r)] = a_0[r] + PI_1;
+		F[I(l, phi, theta, r)] = q*(dtheta*theta) + PI_2;
+		G[I(l, phi, theta, r)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
 	}
 } 
 

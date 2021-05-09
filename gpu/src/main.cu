@@ -34,7 +34,7 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
 int main(int argc, char *argv[]){
 
     if (argc != 10){
-        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n> <niter> <boundary>\n");
+        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n> <nGPU> <GPU Width> <niter> <boundary>\n");
         exit(1);
     }
 
@@ -46,8 +46,10 @@ int main(int argc, char *argv[]){
     int p = atoi(argv[5]);
     int q = atoi(argv[6]);
     int n = atoi(argv[7]);
-    bool boundary = atoi(argv[9]);
-    size_t niter = atoi(argv[8]);
+    int nGPU = atoi(argv[8]);
+    int GPUWidth = atoi(argv[9]);
+    bool boundary = atoi(argv[11]);
+    size_t niter = atoi(argv[10]);
 
 
     REAL dr = 2*PI/999.0;
@@ -55,24 +57,21 @@ int main(int argc, char *argv[]){
     REAL dphi = 2*PI/999.0;
 
     // +2 for ghost points offset
-	size_t nelements = buffSize*(M+2)*(N+2)*(O+2);
+	size_t nelements = buffSize*(M+GHOST_SIZE)*(N+GHOST_SIZE)*(O+GHOST_SIZE);
 	cout << "Number of elements: " << nelements << endl;
 
-// its better to separate fdm grid with continuous axes
-	cout << "Generating grids..."; fflush(stdout);
-    REAL *a;
-    REAL *F;
-    REAL *G;
-    cudaMallocManaged(&a, nelements*sizeof(REAL));
-    cudaMallocManaged(&F, nelements*sizeof(REAL));
-    cudaMallocManaged(&G, nelements*sizeof(REAL));
-	cout << "done" << endl;
+    // its better to separate fdm grid with continuous axes
+    cout << "Generating grids..."; fflush(stdout);
+    REAL *a = new REAL[nelements];
+    REAL *F = new REAL[nelements];
+    REAL *G = new REAL[nelements];
+    cout << "done" << endl;
+
 
     cout << "Reading values for a(r)...";fflush(stdout);
-    REAL *a_0;
-    cudaMallocManaged(&a_0, M*sizeof(REAL));
+    REAL *a_0 new REAL[M];
     int i = 0;
-	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-1000.csv");
+	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-"+to_string(M)+".csv");
     if (file.is_open()){
         string line;
         while(getline(file, line)){
@@ -80,10 +79,10 @@ int main(int argc, char *argv[]){
             i++;
         }
     } else {
-        cout << "Could not open file." << endl;
+        cout << "No se puede abrir el archivo: " << "../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-"+to_string(M)+".csv" << endl;
         exit(-190);
     }
-    cout << "done. " << i << " elements red" << endl;;
+    cout << "done. " << i << " elements read" << endl;;
     //REAL lambda = 4.0/6.0*(1.0/5.45*129.0)*50.9;
     REAL lambda = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
     //REAL lambda = 4.0/6.0*(1.0/E*186.0)*50.9;
@@ -96,29 +95,60 @@ int main(int argc, char *argv[]){
     string filename1 = "result-"+to_string(M)+"-F.dat";
     string filename2 = "result-"+to_string(M)+"-G.dat";
 
+    omp_set_num_threads(nGPU);
 	
     dim3 g, b;
-	b = dim3(8, 8, 8);
+	b = dim3(32, 4, 1);
 	g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (O+b.z-1)/(b.z));
 	cout << "Grid(" << g.x << ", " << g.y << ", " << g.z << ")" << endl;
 	cout << "Block(" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
 
     cout << "Filling state 0..."; fflush(stdout);
-    fillInitialCondition<<<g, b>>>(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+
+    #pragma omp parallel for
+    for(int w=0; w<(O+GPUWidth-1)/GPUWidth; w++){
+        cudaSetDevice(omp_get_thread_num());
+        REAL *da_0;
+        cudaMalloc(&da_0, M*sizeof(REAL));
+        cudaMemcpy(da_0, a_0, M*sizeof(REAL), cudaMemcpyDeviceToHost);
+
+        size_t nelements_slice = (M+GHOST_SIZE)*(N+GHOST_SIZE)*(GPUWidth+GHOST_SIZE)*4
+        REAL* a_slice, F_slice, G_slice;
+
+        cudaMalloc(&a_slice, nelements_slice*sizeof(REAL));
+        cudaMalloc(&F_slice, nelements_slice*sizeof(REAL));
+        cudaMalloc(&G_slice, nelements_slice*sizeof(REAL));
+
+        for (int time=0; time<buffSize; time++){
+            cudaMemcpy(a_slice + nelements_slice*time, a + I(time, GPUWidth*w-1), nelements_slice*sizeof(REAL), cudaMemcpyHostToDevice);
+            cudaMemcpy(F_slice + nelements_slice*time, F + I(time, GPUWidth*w-1), nelements_slice*sizeof(REAL), cudaMemcpyDeviceToHost);
+            cudaMemcpy(G_slice + nelements_slice*time, G + I(time, GPUWidth*w-1), nelements_slice*sizeof(REAL), cudaMemcpyDeviceToHost);    
+        }
+        
+        fillInitialCondition<<<g, b>>>(a_slice, F_slice, G_slice, 0, M, N, GPUWidth, w*GPUWidth, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+    }
+
+    //fillInitialCondition<<<g, b>>>(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     cucheck(cudaDeviceSynchronize());
     checkError();
-    if (boundary == 0){
+    
+    /*if (boundary == 0){
 	    fillDirichletBoundary<<<g, b>>>(a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     } else if (boundary == 1){
 	    fillGhostPoints<<<g, b>>>(a, F, G, 0, M, N, O);
-    } 
+    } */
     cucheck(cudaDeviceSynchronize());
     checkError();
     cout << " done." << endl;
-    //writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
     //writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
     //writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
+    exit(4);
+
+
+
+
 
     cout << "Filling state 1..."; fflush(stdout);
     fillInitialCondition<<<g, b>>>(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);

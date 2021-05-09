@@ -32,8 +32,15 @@
    }
 
 #define GHOST_SIZE 2
-#define I(t, r, theta, phi) (t)*(M+GHOST_SIZE)*(N+GHOST_SIZE)*(O+GHOST_SIZE) + (r+1)*(N+GHOST_SIZE)*(O+GHOST_SIZE) + (theta+1)*(O+GHOST_SIZE) + phi+1
-#define E(t, r, theta, phi) (t)*(M+GHOST_SIZE)*(N+GHOST_SIZE)*(O+GHOST_SIZE) + (r)*(N+GHOST_SIZE)*(O+GHOST_SIZE) + (theta)*(O+GHOST_SIZE) + phi
+#define I(t, phi, theta, r) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (phi+1)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (theta+1)*(M+GHOST_SIZE) + r+1
+#define I(t, phi, theta) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (phi+1)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (theta+1)*(M+GHOST_SIZE)
+#define I(t, phi) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (phi+1)*(N+GHOST_SIZE)*(M+GHOST_SIZE) 
+#define I(t) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE)
+
+#define E(t, phi, theta, r) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (phi)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (theta)*(M+GHOST_SIZE) + r
+#define E(t, phi, theta) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (phi)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (theta)*(M+GHOST_SIZE)
+#define E(t, phi) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (phi)*(N+GHOST_SIZE)*(M+GHOST_SIZE)
+#define E(t) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE)
 
 #define E1 0.000
 #define E2 0.000
