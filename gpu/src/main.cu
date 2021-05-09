@@ -105,45 +105,57 @@ int main(int argc, char *argv[]){
 
     cout << "Filling state 0..."; fflush(stdout);
     fillInitialCondition<<<g, b>>>(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    cucheck(cudaDeviceSynchronize());
+    checkError();
     if (boundary == 0){
 	    fillDirichletBoundary<<<g, b>>>(a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     } else if (boundary == 1){
 	    fillGhostPoints<<<g, b>>>(a, F, G, 0, M, N, O);
     } 
+    cucheck(cudaDeviceSynchronize());
+    checkError();
     cout << " done." << endl;
-    writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-    writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-    writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+    //writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    //writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    //writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
 
     cout << "Filling state 1..."; fflush(stdout);
     fillInitialCondition<<<g, b>>>(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    cucheck(cudaDeviceSynchronize());
+    checkError();
     //computeFirstIteration(a, F, G, 1, 1, 0, -1, -2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     if (boundary == 0){
 	    fillDirichletBoundary<<<g, b>>>(a, F, G, 1, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     } else if (boundary == 1){
 	    fillGhostPoints<<<g, b>>>(a, F, G, 1, M, N, O);
     } 
+    cucheck(cudaDeviceSynchronize());
+    checkError();
     cout << " done." << endl;
 
-    writeTimeSnapshot(filename0, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-    writeTimeSnapshot(filename1, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-    writeTimeSnapshot(filename2, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+    //writeTimeSnapshot(filename0, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    //writeTimeSnapshot(filename1, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    //writeTimeSnapshot(filename2, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
     getchar();
 
     cout << "Filling state 2..."; fflush(stdout);
-    computeSecondIteration(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    computeSecondIteration(a, F, G, 2, 2, 1, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    cucheck(cudaDeviceSynchronize());
+    checkError();
     if (boundary == 0){
 	    fillDirichletBoundary<<<g, b>>>(a, F, G, 2, 2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     } else if (boundary == 1){
 	    fillGhostPoints<<<g, b>>>(a, F, G, 2, M, N, O);
     } 
+    cucheck(cudaDeviceSynchronize());
+    checkError();
 
 
     writeTimeSnapshot(filename0, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-    writeTimeSnapshot(filename1, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-    writeTimeSnapshot(filename2, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+    //writeTimeSnapshot(filename1, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    //writeTimeSnapshot(filename2, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
     getchar();
 
@@ -158,11 +170,15 @@ int main(int argc, char *argv[]){
 	cout << tp1 << " " << t << " " << tm1 << " " << tm2 << " "  << endl;
 
 	computeNextIteration(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    	cucheck(cudaDeviceSynchronize());
+    	checkError();
 	if (boundary == 0){
 		fillDirichletBoundary<<<g, b>>>(a, F, G, l, tp1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	} else if (boundary == 1){
 	    fillGhostPoints<<<g, b>>>(a, F, G, tp1, M, N, O);
 	} 
+    	cucheck(cudaDeviceSynchronize());
+    	checkError();
 
 
 	cout << "Finished iteration l=" << l << endl;
@@ -172,8 +188,8 @@ int main(int argc, char *argv[]){
 	if (l%10==0){
 	    cout << "Saving values..." << endl;
 	    writeTimeSnapshot(filename0, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-	    writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-	    writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+	    //writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+	    //writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
 	    cout << "done." << endl;
 	    //getchar();
 	}
@@ -203,6 +219,7 @@ static MatrixXcd t3 = [] {
     matrix << 1, 0, 0, -1;
     return matrix;
 }();
+
 MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
     REAL anow = a[I(t, r, theta, phi)];
     REAL Fnow = F[I(t, r, theta, phi)];
@@ -278,7 +295,6 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
             double oo = 0;
             for (size_t o=0; o<O; o=round(oo)){
                 if (file.is_open()){
-					cout << m << ", " << n << ", " << o << endl;
                     file <<std::fixed << std::setprecision(62) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, cual) << "\n";
                     file.flush();
                 }
