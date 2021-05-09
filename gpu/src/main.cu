@@ -120,9 +120,9 @@ int main(int argc, char *argv[]){
         cudaMalloc(&G_slice, nelements_slice*sizeof(REAL));
 
         for (int time=0; time<buffSize; time++){
-            cudaMemcpy(a_slice + nelements_slice*time, a + I(time, GPUWidth*w-1), nelements_slice*sizeof(REAL), cudaMemcpyHostToDevice);
-            cudaMemcpy(F_slice + nelements_slice*time, F + I(time, GPUWidth*w-1), nelements_slice*sizeof(REAL), cudaMemcpyDeviceToHost);
-            cudaMemcpy(G_slice + nelements_slice*time, G + I(time, GPUWidth*w-1), nelements_slice*sizeof(REAL), cudaMemcpyDeviceToHost);    
+            cudaMemcpy(a_slice + nelements_slice*time, a + I(time, GPUWidth*w-1, 0, 0), nelements_slice*sizeof(REAL), cudaMemcpyHostToDevice);
+            cudaMemcpy(F_slice + nelements_slice*time, F + I(time, GPUWidth*w-1, 0, 0), nelements_slice*sizeof(REAL), cudaMemcpyDeviceToHost);
+            cudaMemcpy(G_slice + nelements_slice*time, G + I(time, GPUWidth*w-1, 0, 0), nelements_slice*sizeof(REAL), cudaMemcpyDeviceToHost);    
         }
         
         fillInitialCondition<<<g, b>>>(a_slice, F_slice, G_slice, 0, M, N, GPUWidth, w*GPUWidth, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
