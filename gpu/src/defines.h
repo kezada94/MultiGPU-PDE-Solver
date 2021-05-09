@@ -21,7 +21,15 @@
 	assert(0);																												\
 	}\
 	}
-
+#define checkError() \
+   {\
+   cudaError_t err = cudaGetLastError();        \
+   if ( err != cudaSuccess )\
+   {\
+      printf("CUDA Error: %s\n", cudaGetErrorString(err));\
+      exit(-1);\
+   }\
+   }
 
 #define GHOST_SIZE 2
 #define I(t, r, theta, phi) (t)*(M+GHOST_SIZE)*(N+GHOST_SIZE)*(O+GHOST_SIZE) + (r+1)*(N+GHOST_SIZE)*(O+GHOST_SIZE) + (theta+1)*(O+GHOST_SIZE) + phi+1

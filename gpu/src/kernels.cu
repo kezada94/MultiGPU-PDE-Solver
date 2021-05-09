@@ -29,27 +29,36 @@ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_
 	b = dim3(8, 8, 8);
 	g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (O+b.z-1)/(b.z));
 		computeNexta<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    	cucheck(cudaDeviceSynchronize());
 		computeNextF<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    	cucheck(cudaDeviceSynchronize());
 		computeNextG<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    	cucheck(cudaDeviceSynchronize());
 	
 }
 void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_t t, size_t tm1, size_t tm2, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	dim3 g, b;
 	b = dim3(8, 8, 8);
 	g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (O+b.z-1)/(b.z));
-		computeFirsta<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-		computeFirstF<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-		computeFirstG<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+	computeFirsta<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    	cucheck(cudaDeviceSynchronize());
+	computeFirstF<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    	cucheck(cudaDeviceSynchronize());
+	computeFirstG<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    	cucheck(cudaDeviceSynchronize());
 	
 }
 
 void computeSecondIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_t t, size_t tm1, size_t tm2, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	dim3 g, b;
-	b = dim3(8, 8, 8);
+	b = dim3(32, 4, 2);
 	g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (O+b.z-1)/(b.z));
 		computeSeconda<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    	cucheck(cudaDeviceSynchronize());
 		computeSecondF<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    	cucheck(cudaDeviceSynchronize());
 		computeSecondG<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);	
+    	cucheck(cudaDeviceSynchronize());
 	
 }
 
