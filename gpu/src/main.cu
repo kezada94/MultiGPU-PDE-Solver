@@ -33,8 +33,8 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
 
 int main(int argc, char *argv[]){
 
-    if (argc != 10){
-        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n> <nGPU> <GPU Width> <niter> <boundary>\n");
+    if (argc != 11){
+        printf("Error. Try executing with\n\t./laplace <dt> <M> <N> <O> <p> <q> <n> <nGPU> <niter> <boundary>\n");
         exit(1);
     }
 
@@ -47,10 +47,17 @@ int main(int argc, char *argv[]){
     int q = atoi(argv[6]);
     int n = atoi(argv[7]);
     int nGPU = atoi(argv[8]);
-    size_t GPUWidth = atoi(argv[9]);
-    bool boundary = atoi(argv[11]);
-    size_t niter = atoi(argv[10]);
+    bool boundary = atoi(argv[10]);
+    size_t niter = atoi(argv[9]);
 
+
+
+    size_t slicesStartIndex[nGPU+1];
+    for (int i=0; i<nGPU; i++){
+    	slicesStartIndex[i] = round((float)O/nGPU*i); 
+		cout << slicesStartIndex[i] << endl;
+    }
+    slicesStartIndex[nGPU] = O; 
 
     REAL dr = 2*PI/999.0;
     REAL dtheta = PI/999.0;
@@ -95,42 +102,103 @@ int main(int argc, char *argv[]){
     string filename1 = "result-"+to_string(M)+"-F.dat";
     string filename2 = "result-"+to_string(M)+"-G.dat";
 
-    omp_set_num_threads(nGPU);
 	
-    dim3 g, b;
-	b = dim3(32, 4, 1);
-	g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (O+b.z-1)/(b.z));
-	cout << "Grid(" << g.x << ", " << g.y << ", " << g.z << ")" << endl;
-	cout << "Block(" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
+	//cout << "Grid(" << g.x << ", " << g.y << ", " << g.z << ")" << endl;
+	//cout << "Block(" << b.x << ", " << b.y << ", " << b.z << ")" << endl;
 
     cout << "Filling state 0..."; fflush(stdout);
 
-    #pragma omp parallel for
-    for(size_t w=0; w<(O+GPUWidth-1)/GPUWidth; w++){
-        cudaSetDevice(omp_get_thread_num());
+    omp_set_num_threads(nGPU);
+    #pragma omp parallel
+    {
+		int tid = omp_get_thread_num();
+		size_t GPUWidth = slicesStartIndex[tid+1] - slicesStartIndex[tid];
+		cout << "GPU " << tid << " works " << GPUWidth << " elements. Starting at " << slicesStartIndex[tid] <<  endl;
+		dim3 g, b;
+		b = dim3(32, 4, 2);
+		g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (GPUWidth+b.z-1)/(b.z));
+    
+        cucheck(cudaSetDevice(tid));
         REAL *da_0;
-        cudaMalloc(&da_0, M*sizeof(REAL));
-        cudaMemcpy(da_0, a_0, M*sizeof(REAL), cudaMemcpyDeviceToHost);
+        cucheck(cudaMalloc(&da_0, M*sizeof(REAL)));
+        cucheck(cudaMemcpy(da_0, a_0, M*sizeof(REAL), cudaMemcpyHostToDevice));
 
-        size_t nelements_slice = (M+GHOST_SIZE)*(N+GHOST_SIZE)*(GPUWidth+GHOST_SIZE)*4;
+        size_t nelements_slice = (M+GHOST_SIZE)*(N+GHOST_SIZE)*(GPUWidth+GHOST_SIZE)*buffSize;
         REAL* a_slice, *F_slice, *G_slice;
 
-        cudaMalloc(&a_slice, nelements_slice*sizeof(REAL));
-        cudaMalloc(&F_slice, nelements_slice*sizeof(REAL));
-        cudaMalloc(&G_slice, nelements_slice*sizeof(REAL));
+        cucheck(cudaMalloc(&a_slice, nelements_slice*sizeof(REAL)));
+        cucheck(cudaMalloc(&F_slice, nelements_slice*sizeof(REAL)));
+        cucheck(cudaMalloc(&G_slice, nelements_slice*sizeof(REAL)));
 
-        for (int time=0; time<buffSize; time++){
-            cudaMemcpy(a_slice + nelements_slice*time, a + I(time, GPUWidth*w-1, 0, 0), nelements_slice*sizeof(REAL), cudaMemcpyHostToDevice);
-            cudaMemcpy(F_slice + nelements_slice*time, F + I(time, GPUWidth*w-1, 0, 0), nelements_slice*sizeof(REAL), cudaMemcpyDeviceToHost);
-            cudaMemcpy(G_slice + nelements_slice*time, G + I(time, GPUWidth*w-1, 0, 0), nelements_slice*sizeof(REAL), cudaMemcpyDeviceToHost);    
+        fillInitialCondition<<<g, b>>>(a_slice, F_slice, G_slice, 0, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+		cucheck(cudaDeviceSynchronize());
+    	checkError();
+
+	    fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, 0, 0, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+		cucheck(cudaDeviceSynchronize());
+		checkError();
+
+        // Se copia el bloque de a+2 * theta+2 * phi (alfa y theta con halo, pero phi sin halo) esto debido a que los halos de phi se pueden sobreescribir entre tortas.
+        for (int time=0; time<1/*buffSize*/; time++){
+            cucheck(cudaMemcpy(a + I(time, slicesStartIndex[tid], -1, -1), a_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+            cucheck(cudaMemcpy(F + I(time, slicesStartIndex[tid], -1, -1), F_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+            cucheck(cudaMemcpy(G + I(time, slicesStartIndex[tid], -1, -1), G_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));    
         }
-        
-        fillInitialCondition<<<g, b>>>(a_slice, F_slice, G_slice, 0, M, N, GPUWidth, w*GPUWidth, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
-    }
+		cucheck(cudaDeviceSynchronize());
+		checkError();
 
-    //fillInitialCondition<<<g, b>>>(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-    cucheck(cudaDeviceSynchronize());
-    checkError();
+		#pragma omp barrier
+        if (tid == 0){
+            writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+            cout << "Written" << endl;
+        }
+
+        fillInitialCondition<<<g, b>>>(a_slice, F_slice, G_slice, 1, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+		cucheck(cudaDeviceSynchronize());
+    	checkError();
+
+
+	    fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, 1, 1, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+		cucheck(cudaDeviceSynchronize());
+		checkError();
+
+        // Se copia el bloque de a+2 * theta+2 * phi (alfa y theta con halo, pero phi sin halo) esto debido a que los halos de phi se pueden sobreescribir entre tortas.
+        for (int time=1; time<2/*buffSize*/; time++){
+            cucheck(cudaMemcpy(a + I(time, slicesStartIndex[tid], -1, -1), a_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (time+1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+            cucheck(cudaMemcpy(F + I(time, slicesStartIndex[tid], -1, -1), F_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (time+1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+            cucheck(cudaMemcpy(G + I(time, slicesStartIndex[tid], -1, -1), G_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (time+1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));    
+        }
+		cucheck(cudaDeviceSynchronize());
+		checkError();
+
+		#pragma omp barrier
+        if (tid == 0){
+            writeTimeSnapshot(filename0, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+            cout << "Written" << endl;
+        }
+
+        cout << "Filling state 2..."; fflush(stdout);
+        computeSecondIteration(a_slice, F_slice, G_slice, 2, 2, 1, 0, 0, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g);
+        cucheck(cudaDeviceSynchronize());
+        checkError();
+        fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, 2, 2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+        cucheck(cudaDeviceSynchronize());
+        checkError();
+        // Se copia el bloque de a+2 * theta+2 * phi (alfa y theta con halo, pero phi sin halo) esto debido a que los halos de phi se pueden sobreescribir entre tortas.
+        for (int time=2; time<3/*buffSize*/; time++){
+            cucheck(cudaMemcpy(a + I(time, slicesStartIndex[tid], -1, -1), a_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (time+1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+            cucheck(cudaMemcpy(F + I(time, slicesStartIndex[tid], -1, -1), F_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (time+1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+            cucheck(cudaMemcpy(G + I(time, slicesStartIndex[tid], -1, -1), G_slice + (GPUWidth+1)*time*(M+2)*(N+2) + (time+1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));    
+        }
+		cucheck(cudaDeviceSynchronize());
+		checkError();
+
+		#pragma omp barrier
+        if (tid == 0){
+            writeTimeSnapshot(filename0, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+            cout << "Written" << endl;
+        }
+    }
     
     /*if (boundary == 0){
 	    fillDirichletBoundary<<<g, b>>>(a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
@@ -140,7 +208,7 @@ int main(int argc, char *argv[]){
     cucheck(cudaDeviceSynchronize());
     checkError();
     cout << " done." << endl;
-    writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    //writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
     //writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
     //writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
@@ -276,6 +344,13 @@ MatrixXcd getF(MatrixXcd L1, MatrixXcd L2){
 }
 
 REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual){
+	if (cual == 0){
+            return a[I(t, phi, theta, r)];//t00;
+	} else if (cual == 1){
+	    	return F[I(t, phi, theta, r)];//t00;
+	} else if (cual == 2){
+    	    return G[I(t, phi, theta, r)];//t00;
+	}
     MatrixXcd Um1 = getUm1(a, F, G, t, r, theta, phi, M, N, O);
     MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, tm1, r, theta, phi, M, N, O))/dt); 
     MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/(dr)); 
@@ -301,13 +376,6 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
                                         	+getF(L_3, L_1)*getF(L_3, L_1)
                                         	+getF(L_2, L_3)*getF(L_2, L_3)
                                         	+getF(L_3, L_2)*getF(L_3, L_2))) )).trace()).real();
-	if (cual == 0){
-    	return a[I(t, r, theta, phi)];//t00;
-	} else if (cual == 1){
-		return F[I(t, r, theta, phi)];//t00;
-	} else if (cual == 2){
-    	return G[I(t, r, theta, phi)];//t00;
-	}
     return t00;
 
 
@@ -317,25 +385,23 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
     ofstream file;
     //file.open(filename);
     file.open(filename, std::ofstream::app);
-    double mm = 0;
-    for (size_t m=0; m<M; m=round(mm)){
-    	cout << m << endl;
+	if (!file.is_open()){
+		std::cerr << "didn't write" << std::endl;
+	}
+    double oo = 0;
+    for (size_t o=0; o<O; o=round(oo)){
+    	cout << o << endl;
         double nn = 0;
             for (size_t n=0; n<N; n=round(nn)){
-            double oo = 0;
-            for (size_t o=0; o<O; o=round(oo)){
-                if (file.is_open()){
-                    file <<std::fixed << std::setprecision(62) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, cual) << "\n";
-                    file.flush();
-                }
-                else{
-                    std::cerr << "didn't write" << std::endl;
-                }
-                oo += (double)(O-1)/9.0;
+            double mm = 0;
+            for (size_t m=0; m<M; m=round(mm)){
+				file <<std::fixed << std::setprecision(32) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, cual) << "\n";
+				file.flush();
+                mm += (double)(M-1)/99.0;
             }
             nn += (double)(N-1)/99.0;
         }
-        mm += (double)(M-1)/99.0;
+        oo += (double)(O-1)/9.0;
     }
     file.close();
 
