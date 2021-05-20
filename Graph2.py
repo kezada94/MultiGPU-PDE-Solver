@@ -29,7 +29,7 @@ else:
     Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-G.dat", delimiter="\n")
 
 
-Z = Z.reshape((-1, 100, 100, 10))
+Z = Z.reshape((-1, 10, 100, 100))
 
 L = Z.shape[0]
 print(Z.shape)
@@ -126,7 +126,7 @@ def update():
                         err += abs(1.0*(0.00001*(l-3)*10 - dk*(k)) - data[i, j, k])
 
     print(err)
-    
+
 
     v.setData(d2)
     l = (l+1)
