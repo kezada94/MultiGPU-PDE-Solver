@@ -6,7 +6,7 @@ GCC_FLAGS=-O3 -std=c++17 -fopenmp
 NVCC_FLAGS=-Xcompiler -fopenmp
 LIBS= 
 DEFINES=
-INCLUDES=-I../vendor/eigen-3.3.9
+INCLUDES=-I../vendor/eigen-3.4-rc1
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)
 CU_FILES=$(wildcard $(SRC_DIR)/*cu)
 
