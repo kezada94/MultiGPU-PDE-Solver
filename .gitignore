@@ -1,2 +1,4 @@
 *.dat
 *.o
+.DS_Store
+.vscode/
