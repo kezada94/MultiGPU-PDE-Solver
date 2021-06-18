@@ -159,21 +159,21 @@ int main(int argc, char *argv[]){
     cudaFuncSetAttribute(computeNexta, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     cudaFuncSetAttribute(computeNextF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);*/
+    for (int i=0; i<nGPU; i++){
+        cudaSetDevice(i);
+        cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+
+        cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+
+        cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeNextG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+    }
     
-    cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-
-    cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-
-    cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeNextG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-
-
-
     #pragma omp parallel shared(tiempos, bytes, slices_ptra, slices_ptrF, slices_ptrG, slices_widths)
     {
 		int tid = omp_get_thread_num();
