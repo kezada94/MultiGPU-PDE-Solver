@@ -3,7 +3,7 @@ SRC_DIR=src
 OBJ_DIR=obj
 VERBOSE=no
 GCC_FLAGS=-O3 -std=c++17 -fopenmp
-NVCC_FLAGS=-Xcompiler -fopenmp --disable-warnings -arch sm_80
+NVCC_FLAGS=-Xcompiler -fopenmp --disable-warnings -gencode=arch=compute_80,code=sm_80
 LIBS= 
 BSIZEX=32
 BSIZEY=4
