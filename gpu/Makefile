@@ -22,13 +22,13 @@ NVCC_OBJS=$(patsubst %.cu,$(OBJ_DIR)/%.cu.o,$(notdir $(CU_FILES)))
 all: $(TARGET)
 
 $(TARGET) : $(GCC_OBJS) $(NVCC_OBJS)
-	nvcc $(NVCC_FLAGS) $(LIBS) $(INCLUDES) -o $@ $?
+	nvcc $(DEFINES) $(NVCC_FLAGS) $(LIBS) $(INCLUDES) -o $@ $?
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	g++ $(GCC_FLAGS) $(INCLUDES) -c -o $@ $<
 
 $(OBJ_DIR)/%.cu.o : $(SRC_DIR)/%.cu
-	nvcc $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
+	nvcc $(DEFINES) $(NVCC_FLAGS) $(INCLUDES) -c -o $@ $<
 
 clean:
 	rm $(TARGET) $(OBJ_DIR)/*
