@@ -2,7 +2,7 @@
 
 #include "defines.h"
 
-__device__ void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, size_t M, size_t N, size_t O, size_t global_phi, int r, int theta, int phi){
+__device__ inline void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, size_t M, size_t N, size_t O, size_t global_phi, int r, int theta, int phi){
 
 
     // Cada hilo copia el valor que le corresponde dentro del volumen por cada uno de los 4 tiempos
