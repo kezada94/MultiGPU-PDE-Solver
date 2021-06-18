@@ -147,17 +147,18 @@ int main(int argc, char *argv[]){
     size_t* slices_widths = new size_t[nGPU];
 
     size_t sharedMemorySizeb = (buffSize)*nfunctions*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)*sizeof(REAL);
-    cudaFuncSetAttribute(computeFirsta, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeFirstF, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeFirstG, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    int carveout = 50;
+    cudaFuncSetAttribute(computeFirsta, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeFirstF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeFirstG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
 
-    cudaFuncSetAttribute(computeSeconda, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeSecondF, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeSecondG, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeSeconda, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeSecondF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeSecondG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
 
-    cudaFuncSetAttribute(computeNexta, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeNextF, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeNexta, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeNextF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
 
     #pragma omp parallel shared(tiempos, bytes, slices_ptra, slices_ptrF, slices_ptrG, slices_widths)
     {
