@@ -143,6 +143,20 @@ int main(int argc, char *argv[]){
     REAL** slices_ptrF = new REAL*[nGPU];
     REAL** slices_ptrG = new REAL*[nGPU];
     size_t* slices_widths = new size_t[nGPU];
+
+    size_t sharedMemorySizeb = (buffSize)*nfunctions*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)*sizeof(REAL);
+    cudaFuncSetAttribute(computeFirsta, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeFirstF, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeFirstG, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+
+    cudaFuncSetAttribute(computeSeconda, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeSecondF, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeSecondG, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+
+    cudaFuncSetAttribute(computeNexta, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeNextF, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, sharedMemorySizeb);
+
     #pragma omp parallel shared(tiempos, bytes, slices_ptra, slices_ptrF, slices_ptrG, slices_widths)
     {
 		int tid = omp_get_thread_num();
@@ -203,6 +217,7 @@ int main(int argc, char *argv[]){
         slices_ptrF[tid] = F_slice;
         slices_ptrG[tid] = G_slice;
         
+
         // ESTADO 0, 1
 
         for (int time=0; time<2; time++){
@@ -334,9 +349,9 @@ int main(int argc, char *argv[]){
             }
             cucheck( cudaEventRecord(inicio, 0));
             if (l == 2) {
-                computeSecondIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g);
+                computeSecondIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
             } else {
-                computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g);
+                computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
             }
             cucheck( cudaEventRecord(fin, 0));
             cucheck( cudaEventSynchronize(fin));
