@@ -159,18 +159,18 @@ int main(int argc, char *argv[]){
     cudaFuncSetAttribute(computeNexta, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     cudaFuncSetAttribute(computeNextF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
-    
-    cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
-    cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
+    cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
+    cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
 
-    cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-    cudaFuncSetAttribute(computeNextG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+    cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
+    cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
+    cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
+
+    cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
+    cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
+    cudaFuncSetAttribute(computeNextG, cudaFuncAttributeMaxDynamicSharedMemorySize, 163840);
 
 
 
