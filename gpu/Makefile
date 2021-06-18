@@ -6,8 +6,8 @@ GCC_FLAGS=-O3 -std=c++17 -fopenmp
 NVCC_FLAGS=-Xcompiler -fopenmp --disable-warnings -gencode=arch=compute_80,code=sm_80
 LIBS= 
 BSIZEX=32
-BSIZEY=4
-BSIZEZ=2
+BSIZEY=2
+BSIZEZ=1
 DEFINES=-DBSIZEX=${BSIZEX} -DBSIZEY=${BSIZEY} -DBSIZEZ=${BSIZEZ}
 INCLUDES=-I../vendor/eigen-3.3.9
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)
