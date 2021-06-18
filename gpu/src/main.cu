@@ -11,7 +11,9 @@
 using namespace Eigen;
 
 #include "kernels.cuh"
-
+#include "EquationAlfa.cuh"
+#include "EquationF.cuh"
+#include "EquationG.cuh"
 
 using namespace std;
 

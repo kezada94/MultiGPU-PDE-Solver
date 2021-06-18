@@ -65,7 +65,7 @@ __device__ inline void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, siz
     }
 }
 
-__device__ inline void copySharedMemoryToGlobal(REAL* sh, REAL *a, REAL *F, REAL *G, size_t M, size_t N, size_t O, size_t global_phi, int r, int theta, int phi, size_t t){
+__device__ inline void copySharedMemoryToGlobal(REAL* sh, REAL *a, REAL *F, REAL *G, size_t M, size_t N, size_t O, size_t global_phi, int r, int theta, int phi, size_t tp1){
 
     // Cada hilo copia el valor que le corresponde dentro del volumen por cada uno de los 4 tiempos
     a[I(tp1, global_phi, theta, r)] = sh[CI(0, tp1, threadIdx.z, threadIdx.y, threadIdx.x)];
