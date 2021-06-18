@@ -8,9 +8,9 @@ __global__ void computeNextF(REAL *a, REAL *F, REAL *G, size_t l, size_t tp1, si
     int phi = blockIdx.z*blockDim.z + threadIdx.z;
     int global_phi = phi + phi_offset;
     
-    __shared__ REAL shmem_a[4*(2+2)*(4+2)*(32+2)];
-    __shared__ REAL shmem_F[4*(2+2)*(4+2)*(32+2)];
-    __shared__ REAL shmem_G[4*(2+2)*(4+2)*(32+2)];
+    __shared__ REAL shmem_a[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
+    __shared__ REAL shmem_F[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
+    __shared__ REAL shmem_G[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
     
     fillSharedMemory(shmem_a, shmem_F, shmem_G, a, F, G, M, N, O, global_phi, r, theta, phi);
     __syncthreads();
@@ -25,9 +25,9 @@ __global__ void computeSecondF(REAL *a, REAL *F, REAL *G, size_t l, size_t tp1, 
     int phi = blockIdx.z*blockDim.z + threadIdx.z;
     int global_phi = phi + phi_offset;
     
-    __shared__ REAL shmem_a[4*(2+2)*(4+2)*(32+2)];
-    __shared__ REAL shmem_F[4*(2+2)*(4+2)*(32+2)];
-    __shared__ REAL shmem_G[4*(2+2)*(4+2)*(32+2)];
+    __shared__ REAL shmem_a[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
+    __shared__ REAL shmem_F[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
+    __shared__ REAL shmem_G[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
     
     fillSharedMemory(shmem_a, shmem_F, shmem_G, a, F, G, M, N, O, global_phi, r, theta, phi);
     __syncthreads();
@@ -42,9 +42,9 @@ __global__ void computeFirstF(REAL *a, REAL *F, REAL *G, size_t l, size_t tp1, s
     int phi = blockIdx.z*blockDim.z + threadIdx.z;
     int global_phi = phi + phi_offset;
     
-    __shared__ REAL shmem_a[4*(2+2)*(4+2)*(32+2)];
-    __shared__ REAL shmem_F[4*(2+2)*(4+2)*(32+2)];
-    __shared__ REAL shmem_G[4*(2+2)*(4+2)*(32+2)];
+    __shared__ REAL shmem_a[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
+    __shared__ REAL shmem_F[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
+    __shared__ REAL shmem_G[4*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)];
     
     fillSharedMemory(shmem_a, shmem_F, shmem_G, a, F, G, M, N, O, global_phi, r, theta, phi);
     __syncthreads();

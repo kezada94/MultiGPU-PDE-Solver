@@ -172,7 +172,7 @@ int main(int argc, char *argv[]){
 		    cout << "GPU " << tid << " works " << GPUWidth << " elements. Starting at " << slicesStartIndex[tid] <<  endl;
         }
 		dim3 g, b;
-		b = dim3(32, 4, 2);
+		b = dim3(BSIZEX, BSIZEY, BSIZEZ);
 		g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (GPUWidth+b.z-1)/(b.z));
     
         REAL *da_0;

@@ -3,9 +3,12 @@ SRC_DIR=src
 OBJ_DIR=obj
 VERBOSE=no
 GCC_FLAGS=-O3 -std=c++17 -fopenmp
-NVCC_FLAGS=-Xcompiler -fopenmp --disable-warnings
+NVCC_FLAGS=-Xcompiler -fopenmp --disable-warnings -arch sm_80
 LIBS= 
-DEFINES=
+BSIZEX=32
+BSIZEY=2
+BSIZEZ=1
+DEFINES=-DBSIZEX=${BSIZEX} -DBSIZEY=${BSIZEY} -DBSIZEZ=${BSIZEZ}
 INCLUDES=-I../vendor/eigen-3.3.9
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)
 CU_FILES=$(wildcard $(SRC_DIR)/*cu)
