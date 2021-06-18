@@ -203,7 +203,6 @@ int main(int argc, char *argv[]){
         slices_ptrF[tid] = F_slice;
         slices_ptrG[tid] = G_slice;
         
-
         // ESTADO 0, 1
 
         for (int time=0; time<2; time++){

@@ -28,38 +28,41 @@ __global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t
 
 
 void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_t t, size_t tm1, size_t tm2, size_t M, size_t N, size_t O, size_t phi_offset, size_t globalWidth, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0, dim3 b, dim3 g){
+	size_t sharedMemorySizeb = 0x13200;
 
-    computeNexta<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    computeNexta<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 
-    computeNextF<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    computeNextF<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 
-    computeNextG<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    computeNextG<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 }
 
 void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_t t, size_t tm1, size_t tm2, size_t M, size_t N, size_t O, size_t phi_offset, size_t globalWidth, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0, dim3 b, dim3 g){
+	size_t sharedMemorySizeb = 0x13200;
 
-	computeFirsta<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+	computeFirsta<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 
-	computeFirstF<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+	computeFirstF<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 
-	computeFirstG<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+	computeFirstG<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 }
 
 void computeSecondIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_t t, size_t tm1, size_t tm2, size_t M, size_t N, size_t O, size_t phi_offset, size_t globalWidth, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0, dim3 b, dim3 g){
+	size_t sharedMemorySizeb = 0x13200;
 
-    computeSeconda<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    computeSeconda<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 
-    computeSecondF<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+    computeSecondF<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 
-    computeSecondG<<<g, b>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);	
+    computeSecondG<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);	
     cucheck(cudaDeviceSynchronize());
 }
 
