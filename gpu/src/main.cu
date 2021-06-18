@@ -147,6 +147,18 @@ int main(int argc, char *argv[]){
     size_t* slices_widths = new size_t[nGPU];
 
     size_t sharedMemorySizeb = (buffSize)*nfunctions*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)*sizeof(REAL);
+    int carveout = 100;
+    cudaFuncSetAttribute(computeFirsta, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeFirstF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeFirstG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+
+    cudaFuncSetAttribute(computeSeconda, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeSecondF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeSecondG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+
+    cudaFuncSetAttribute(computeNexta, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeNextF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     
     cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
     cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
@@ -159,6 +171,8 @@ int main(int argc, char *argv[]){
     cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
     cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
     cudaFuncSetAttribute(computeNextG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+
+
 
     #pragma omp parallel shared(tiempos, bytes, slices_ptra, slices_ptrF, slices_ptrG, slices_widths)
     {
