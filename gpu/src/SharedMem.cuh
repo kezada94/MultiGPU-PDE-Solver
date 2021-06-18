@@ -1,3 +1,5 @@
+#pragma once
+
 #include "defines.h"
 
 __device__ void fillSharedMemory(REAL* sh_a, REAL* sh_F, REAL* sh_G, REAL *a, REAL *F, REAL *G, size_t M, size_t N, size_t O, size_t global_phi, int r, int theta, int phi){
