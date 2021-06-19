@@ -7,12 +7,11 @@ __global__ void computeNextG(REAL *a, REAL *F, REAL *G, size_t l, size_t tp1, si
     int theta = blockIdx.y*blockDim.y + threadIdx.y;
     int phi = blockIdx.z*blockDim.z + threadIdx.z;
     int global_phi = phi + phi_offset;
-    if (r>=M && theta>=N && phi>=O){
-        return;
-    }
-    extern __shared__ REAL shmem[];
     
-    fillSharedMemory(shmem, a, F, G, M, N, O, global_phi, r, theta, phi);
+    extern __shared__ REAL shmem[];
+    if (r<M && theta<N && phi<O){
+        fillSharedMemory(shmem, a, F, G, M, N, O, global_phi, r, theta, phi);
+    }
     __syncthreads();
     if (r<M && theta<N && phi<O){
         int tidxp = threadIdx.x+1;
@@ -34,12 +33,11 @@ __global__ void computeSecondG(REAL *a, REAL *F, REAL *G, size_t l, size_t tp1, 
     int theta = blockIdx.y*blockDim.y + threadIdx.y;
     int phi = blockIdx.z*blockDim.z + threadIdx.z;
     int global_phi = phi + phi_offset;
-    if (r>=M && theta>=N && phi>=O){
-        return;
-    }
-    extern __shared__ REAL shmem[];
     
-    fillSharedMemory(shmem, a, F, G, M, N, O, global_phi, r, theta, phi);
+    extern __shared__ REAL shmem[];
+    if (r<M && theta<N && phi<O){
+        fillSharedMemory(shmem, a, F, G, M, N, O, global_phi, r, theta, phi);
+    }
     __syncthreads();
     if (r<M && theta<N && phi<O){
         int tidxp = threadIdx.x+1;
@@ -61,12 +59,11 @@ __global__ void computeFirstG(REAL *a, REAL *F, REAL *G, size_t l, size_t tp1, s
     int theta = blockIdx.y*blockDim.y + threadIdx.y;
     int phi = blockIdx.z*blockDim.z + threadIdx.z;
     int global_phi = phi + phi_offset;
-    if (r>=M && theta>=N && phi>=O){
-        return;
-    }
+
     extern __shared__ REAL shmem[];
-    
-    fillSharedMemory(shmem, a, F, G, M, N, O, global_phi, r, theta, phi);
+    if (r<M && theta<N && phi<O){
+        fillSharedMemory(shmem, a, F, G, M, N, O, global_phi, r, theta, phi);
+    }
     __syncthreads();
     if (r<M && theta<N && phi<O){
         int tidxp = threadIdx.x+1;
