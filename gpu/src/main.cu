@@ -161,9 +161,9 @@ int main(int argc, char *argv[]){
     cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);*/
     for (int i=0; i<nGPU; i++){
         cudaSetDevice(i);
-        cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
         cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);

@@ -47,5 +47,8 @@
 #define PI_1 E1*sin(dr*r)*sin(dtheta*theta)*sin(dphi*global_phi)
 #define PI_2 E2*sin(dr*r)*sin(dtheta*theta)*sin(dphi*global_phi)
 #define PI_3 E3*sin(dr*r)*sin(dtheta*theta)*sin(dphi*global_phi)
+#define PI_4 E3*sin(dr*r)*sin(dtheta*theta)*sin(dphi*global_phi)
+#define PI_5 E3*sin(dr*r)*sin(dtheta*theta)*sin(dphi*global_phi)
+#define PI_6 E3*sin(dr*r)*sin(dtheta*theta)*sin(dphi*global_phi)
 
 typedef double REAL;

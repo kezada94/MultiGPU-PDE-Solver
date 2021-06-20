@@ -29,7 +29,7 @@ else:
     Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-G.dat", delimiter="\n")
 
 
-Z = Z.reshape((-1, 10, 100, 100))
+Z = Z.reshape((-1, 3, 100, 100))
 
 L = Z.shape[0]
 print(Z.shape)
