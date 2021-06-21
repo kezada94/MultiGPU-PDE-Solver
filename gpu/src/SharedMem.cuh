@@ -74,9 +74,9 @@ __device__ inline void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, siz
     // Top-Right
     if ((threadIdx.x == blockDim.x-1 || threadIdx.x == M-1) && threadIdx.y == 0){
         for (size_t i = 0; i < 4; i++) {
-            sh[CI(0, i, threadIdx.z, -1, threadIdx+1)] = a[I(i, phi, theta-1, r+1)];
-            sh[CI(1, i, threadIdx.z, -1, threadIdx+1)] = F[I(i, phi, theta-1, r+1)];
-            sh[CI(2, i, threadIdx.z, -1, threadIdx+1)] = G[I(i, phi, theta-1, r+1)];
+            sh[CI(0, i, threadIdx.z, -1, threadIdx.x+1)] = a[I(i, phi, theta-1, r+1)];
+            sh[CI(1, i, threadIdx.z, -1, threadIdx.x+1)] = F[I(i, phi, theta-1, r+1)];
+            sh[CI(2, i, threadIdx.z, -1, threadIdx.x+1)] = G[I(i, phi, theta-1, r+1)];
         }
     }
     // Bottom-Left
@@ -144,9 +144,9 @@ __device__ inline void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, siz
         // Top-Right
         if ((threadIdx.x == blockDim.x-1 || threadIdx.x == M-1) && threadIdx.y == 0){
             for (size_t i = 0; i < 4; i++) {
-                sh[CI(0, i, -1, -1, threadIdx+1)] = a[I(i, phi-1, theta-1, r+1)];
-                sh[CI(1, i, -1, -1, threadIdx+1)] = F[I(i, phi-1, theta-1, r+1)];
-                sh[CI(2, i, -1, -1, threadIdx+1)] = G[I(i, phi-1, theta-1, r+1)];
+                sh[CI(0, i, -1, -1, threadIdx.x+1)] = a[I(i, phi-1, theta-1, r+1)];
+                sh[CI(1, i, -1, -1, threadIdx.x+1)] = F[I(i, phi-1, theta-1, r+1)];
+                sh[CI(2, i, -1, -1, threadIdx.x+1)] = G[I(i, phi-1, theta-1, r+1)];
             }
         }
         // Bottom-Left
@@ -213,9 +213,9 @@ __device__ inline void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, siz
         // Top-Right
         if ((threadIdx.x == blockDim.x-1 || threadIdx.x == M-1) && threadIdx.y == 0){
             for (size_t i = 0; i < 4; i++) {
-                sh[CI(0, i, threadIdx.z+1, -1, threadIdx+1)] = a[I(i, phi+1, theta-1, r+1)];
-                sh[CI(1, i, threadIdx.z+1, -1, threadIdx+1)] = F[I(i, phi+1, theta-1, r+1)];
-                sh[CI(2, i, threadIdx.z+1, -1, threadIdx+1)] = G[I(i, phi+1, theta-1, r+1)];
+                sh[CI(0, i, threadIdx.z+1, -1, threadIdx.x+1)] = a[I(i, phi+1, theta-1, r+1)];
+                sh[CI(1, i, threadIdx.z+1, -1, threadIdx.x+1)] = F[I(i, phi+1, theta-1, r+1)];
+                sh[CI(2, i, threadIdx.z+1, -1, threadIdx.x+1)] = G[I(i, phi+1, theta-1, r+1)];
             }
         }
         // Bottom-Left
