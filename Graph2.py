@@ -36,7 +36,7 @@ print(Z.shape)
 
 
 l = 0
-data = Z[l, :, :, :]
+data = Z[l, 1:-1, 1:-1, 1:-1]
 print(data.shape)
 
 
@@ -93,7 +93,8 @@ w.addItem(ax)
 def update():
     global v, d2, l, Z, t
     ## update volume colors
-    data = Z[l, :, :, :]
+    #data = Z[l, :, :, :]
+    data = Z[l, 1:-1, 1:-1, 1:-1]
     interr = (data - (data.min()))
     print("Valor maximo:", data.max())
     print("T00 minimo:", data.min())
