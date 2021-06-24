@@ -344,8 +344,8 @@ int main(int argc, char *argv[]){
             #pragma omp barrier
             if (tid == 0){
                 writeTimeSnapshot(filename0, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                //writeTimeSnapshot(filename1, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                //writeTimeSnapshot(filename2, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+                writeTimeSnapshot(filename1, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                writeTimeSnapshot(filename2, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                 cout << "Written" << endl;
             }
             #pragma omp barrier
@@ -468,8 +468,8 @@ int main(int argc, char *argv[]){
                 if (tid ==0){
                     cout << "Saving values..." << endl;
                     writeTimeSnapshot(filename0, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                    //writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                    //writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+                    writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                    writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                     cout << "done." << endl;
                 }
 		        #pragma omp barrier

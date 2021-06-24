@@ -50,7 +50,7 @@ d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
 d2[..., 0] = scale/scale.max() * (255.)
 d2[..., 1] = scale/scale.max() * (255.)
 d2[..., 2] = 255# - scale/scale.max() * (255.)
-d2[..., 3] = 30
+d2[..., 3] = 200
 d2[:, 0, 0] = [255,0,0,250]
 d2[0, :, 0] = [0,255,0,250]
 d2[0, 0, :] = [0,0,255,250]
@@ -92,6 +92,7 @@ w.addItem(ax)
 
 def update():
     global v, d2, l, Z, t
+    print(l)
     ## update volume colors
     #data = Z[l, :, :, :]
     data = Z[l, 1:-1, 1:-1, 1:-1]
@@ -107,7 +108,7 @@ def update():
     d2[..., 0] = scale/scale.max() * (255.)
     d2[..., 1] = scale/scale.max() * (255.)
     d2[..., 2] = 255# - scale/scale.max() * (255.)
-    d2[..., 3] = 30
+    d2[..., 3] = 200
 
 
     err = 0
@@ -135,9 +136,10 @@ def update():
         print("REINICIOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!")
         l=0
 
+
 pop = QtCore.QTimer()
 pop.timeout.connect(update)
-pop.start(1000)
+pop.start(100)
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
