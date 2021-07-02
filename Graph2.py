@@ -36,7 +36,7 @@ print(Z.shape)
 
 
 l = 0
-data = Z[l, 1:-1, 1:-1, 1:-1]
+data = Z[l]#, 1:-1, 1:-1, 1:-1]
 print(data.shape)
 
 
@@ -95,7 +95,7 @@ def update():
     print(l)
     ## update volume colors
     #data = Z[l, :, :, :]
-    data = Z[l, 1:-1, 1:-1, 1:-1]
+    data = Z[l]#, 1:-1, 1:-1, 1:-1]
     interr = (data - (data.min()))
     print("Valor maximo:", data.max())
     print("T00 minimo:", data.min())
@@ -111,23 +111,6 @@ def update():
     d2[..., 3] = 200
 
 
-    err = 0
-    dj = np.pi/(100.0-1.0)
-    dk = (2*np.pi)/(10.0-1.0)
-    for i in range(data.shape[0]):
-        for j in range(data.shape[1]):
-            for k in range(data.shape[2]):
-                if t==1:
-                    err += abs(1.0*(dj*(j)) - data[i, j, k])
-                elif t==2:
-                    if l<3:
-                        #print(data[i, j, k], 1.0*(0.00001*(l-2)*10 - dk*(k)))
-                        err += abs(1.0*(0.00001*(l) - dk*(k)) - data[i, j, k])
-                    else:
-                        #print(data[i, j, k], 1.0*(0.00001*(l) - dk*(k)))
-                        err += abs(1.0*(0.00001*(l-3)*10 - dk*(k)) - data[i, j, k])
-
-    print(err)
 
 
     v.setData(d2)
