@@ -19,9 +19,9 @@ __global__ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t
 	if (r<M && theta<N && phi<O){
 		int global_phi = phi + phi_offset;
 
-		a[I(l, phi, theta, r)] = r*dr*dtheta*(REAL)theta*(1 - (REAL)theta*dtheta)*(1 - (REAL)r*dr)*(1+0.5*dt*l);//a_0[r] + PI_1;
-		F[I(l, phi, theta, r)] = r*dr*dtheta*(REAL)theta*(1 - (REAL)theta*dtheta)*(1 - (REAL)r*dr)*(1+0.5*dt*l);//q*(dtheta*theta) + PI_2;
-		G[I(l, phi, theta, r)] = r*dr*dtheta*(REAL)theta*(1 - (REAL)theta*dtheta)*(1 - (REAL)r*dr)*(1+0.5*dt*l);//p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
+		a[I(l, phi, theta, r)] = a_0[r] + PI_1;
+		F[I(l, phi, theta, r)] = q*(dtheta*theta) + PI_2;
+		G[I(l, phi, theta, r)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
 	}
 } 
 
@@ -52,7 +52,7 @@ void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size
 }
 
 void computeSecondIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_t t, size_t tm1, size_t tm2, size_t M, size_t N, size_t O, size_t phi_offset, size_t globalWidth, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0, dim3 b, dim3 g, size_t sharedMemorySizeb){
-/*
+
     computeSeconda<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 
@@ -61,7 +61,7 @@ void computeSecondIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, siz
 
     computeSecondG<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);	
     cucheck(cudaDeviceSynchronize());
-*/
+
 }
 
 /*
@@ -128,17 +128,17 @@ __global__ void fillDirichletBoundary(REAL* a, REAL* F, REAL *G, size_t l, size_
 	    int global_phi = phi + phi_offset;
 
         if (r == 0 || r == M-1 ){
-            a[I(t, phi, theta, r)] = 0;//a_0[r] + PI_1;
-            F[I(t, phi, theta, r)] = 0;//q*(dtheta*theta) + PI_2;
-            G[I(t, phi, theta, r)] = 0;//p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
+            a[I(t, phi, theta, r)] = a_0[r] + PI_1;
+            F[I(t, phi, theta, r)] = q*(dtheta*theta) + PI_2;
+            G[I(t, phi, theta, r)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
         } else if (theta == 0 || theta == N-1 ){
-            a[I(t, phi, theta, r)] = 0;//a_0[r] + PI_1;
-            F[I(t, phi, theta, r)] = 0;//q*(dtheta*theta) + PI_2;
-            G[I(t, phi, theta, r)] = 0;//p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
+            a[I(t, phi, theta, r)] = a_0[r] + PI_1;
+            F[I(t, phi, theta, r)] = q*(dtheta*theta) + PI_2;
+            G[I(t, phi, theta, r)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
         } else if (global_phi == 0 || global_phi == globalWidth-1 ){
-            //a[I(t, phi, theta, r)] = 0;//a_0[r] + PI_1;
-            //F[I(t, phi, theta, r)] = 0;//q*(dtheta*theta) + PI_2;
-            //G[I(t, phi, theta, r)] = 0;//p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
+            a[I(t, phi, theta, r)] = a_0[r] + PI_1;
+            F[I(t, phi, theta, r)] = q*(dtheta*theta) + PI_2;
+            G[I(t, phi, theta, r)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)global_phi) + PI_3;
         }
 	}
 }

@@ -91,9 +91,9 @@ int main(int argc, char *argv[]){
     slicesStartIndex[nGPU] = O; 
     cout << "Corte " << nGPU << ":  "<< slicesStartIndex[nGPU] << endl;
 
-    REAL dr = 1.0/(double)(M-1);
-    REAL dtheta = 1.0/(double)(N-1);
-    REAL dphi = 1.0/(double)(O-1);
+    REAL dr = 2.0*PI/(double)(M-1);
+    REAL dtheta = PI/(double)(N-1);
+    REAL dphi = 2.0*PI/(double)(O-1);
 
     // +2 for ghost points offset
 	size_t nelements = buffSize*(M+GHOST_SIZE)*(N+GHOST_SIZE)*(O+GHOST_SIZE);
@@ -182,9 +182,9 @@ int main(int argc, char *argv[]){
         cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
-        //cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        //cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        //cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
         cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
@@ -360,10 +360,10 @@ int main(int argc, char *argv[]){
 
             #pragma omp barrier
             if (tid == 0){
-				printMSE(a, time, time, dt, dr, dtheta, M, N, O);
+				//printMSE(a, time, time, dt, dr, dtheta, M, N, O);
                 writeTimeSnapshot(filename0, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                //writeTimeSnapshot(filename1, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                //writeTimeSnapshot(filename2, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+                writeTimeSnapshot(filename1, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                writeTimeSnapshot(filename2, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                 cout << "Written" << endl;
             }
             #pragma omp barrier
@@ -371,7 +371,7 @@ int main(int argc, char *argv[]){
 
 
 		#pragma omp barrier
-        for (size_t l=1; l<niter; ++l){
+        for (size_t l=2; l<niter; ++l){
             size_t tp1 = l%buffSize;
             size_t t = (l-1)%buffSize;
             size_t tm1 = (l-2)%buffSize;
@@ -383,8 +383,8 @@ int main(int argc, char *argv[]){
                 printf("GPU %i - Iteration %i: computing state\n", tid, l);
             }
             cucheck( cudaEventRecord(inicio, 0));
-            if (l == 1) {
-                computeFirstIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
+            if (l == 2) {
+                computeSecondIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
             } else {
                 computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
             }
@@ -455,7 +455,7 @@ int main(int argc, char *argv[]){
             printBW(tid, tiempos, nGPU, bytes, "BW: ");
             #pragma omp barrier
 
-            if (l%10 == 0 || true){
+            if (l%10 == 0){
                 int time = tp1;
                 // Se copia el bloque de a+2 * theta+2 * phi (alfa y theta con halo, pero phi sin halo) esto debido a que los halos de phi se pueden sobreescribir entre tortas.
                 #pragma omp critical
@@ -485,12 +485,10 @@ int main(int argc, char *argv[]){
 		        #pragma omp barrier
                 if (tid ==0){
                     cout << "Saving values..." << endl;
-					printMSE(a, l, tp1, dt, dr, dtheta, M, N, O);
-					if (l%20 == 0){
-                    	writeTimeSnapshot(filename0, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-					}
-                    //writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                    //writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+					//printMSE(a, l, tp1, dt, dr, dtheta, M, N, O);
+                    writeTimeSnapshot(filename0, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+                    writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                    writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                     cout << "done." << endl;
                 }
 		        #pragma omp barrier
