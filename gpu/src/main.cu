@@ -21,6 +21,22 @@ const REAL PI = 3.14159265358979323846f;
 const size_t buffSize = 4;
 const size_t nfunctions= 3;
 
+void printMSE(REAL* a, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, size_t M, size_t N, size_t O){
+	double mse = 0;
+
+#pragma omp parallel for shared(mse) num_threads(16)
+	for(int theta=0; theta<N; theta++){
+		for(int r=0; r<M; r++){
+			double sum = 0;
+			sum = r*dr*dtheta*(REAL)theta*(1 - (REAL)theta*dtheta)*(1 - (REAL)r*dr)*(1+0.5*dt*l);
+			//sum = j*dr*(1 - j*dr)*i*dtheta*(1 - i*dtheta)*(1 + 0.5*l*dt);
+#pragma omp critical
+			mse += fabs(a[I(tp1, 0, theta, r)] - sum);
+		}
+	}
+	mse/=(M*N);
+	printf("MSE: %g\n", mse);
+}
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
 REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual);
@@ -42,6 +58,7 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
+	omp_set_nested(1);
     const size_t M = atoi(argv[2]);
     const size_t N = atoi(argv[3]);
     const size_t O = atoi(argv[4]);
@@ -74,9 +91,9 @@ int main(int argc, char *argv[]){
     slicesStartIndex[nGPU] = O; 
     cout << "Corte " << nGPU << ":  "<< slicesStartIndex[nGPU] << endl;
 
-    REAL dr = 2*PI/(double)(M-1);
-    REAL dtheta = PI/(double)(N-1);
-    REAL dphi = 2*PI/(double)(O-1);
+    REAL dr = 1.0/(double)(M-1);
+    REAL dtheta = 1.0/(double)(N-1);
+    REAL dphi = 1.0/(double)(O-1);
 
     // +2 for ghost points offset
 	size_t nelements = buffSize*(M+GHOST_SIZE)*(N+GHOST_SIZE)*(O+GHOST_SIZE);
@@ -161,13 +178,13 @@ int main(int argc, char *argv[]){
     cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);*/
     for (int i=0; i<nGPU; i++){
         cudaSetDevice(i);
-        //cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        //cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        //cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
-        cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
         cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
@@ -237,7 +254,7 @@ int main(int argc, char *argv[]){
 
         // ESTADO 0, 1
 
-        for (int time=0; time<2; time++){
+        for (int time=0; time<1; time++){
             #pragma omp critical
             {
                 printf("GPU %i - Iteration %i: filling initial condition\n", tid, time);
@@ -343,9 +360,10 @@ int main(int argc, char *argv[]){
 
             #pragma omp barrier
             if (tid == 0){
+				printMSE(a, time, time, dt, dr, dtheta, M, N, O);
                 writeTimeSnapshot(filename0, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                writeTimeSnapshot(filename1, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                writeTimeSnapshot(filename2, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+                //writeTimeSnapshot(filename1, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                //writeTimeSnapshot(filename2, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                 cout << "Written" << endl;
             }
             #pragma omp barrier
@@ -353,7 +371,7 @@ int main(int argc, char *argv[]){
 
 
 		#pragma omp barrier
-        for (size_t l=2; l<niter; ++l){
+        for (size_t l=1; l<niter; ++l){
             size_t tp1 = l%buffSize;
             size_t t = (l-1)%buffSize;
             size_t tm1 = (l-2)%buffSize;
@@ -365,8 +383,8 @@ int main(int argc, char *argv[]){
                 printf("GPU %i - Iteration %i: computing state\n", tid, l);
             }
             cucheck( cudaEventRecord(inicio, 0));
-            if (l == 2) {
-                computeSecondIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
+            if (l == 1) {
+                computeFirstIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
             } else {
                 computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
             }
@@ -467,9 +485,12 @@ int main(int argc, char *argv[]){
 		        #pragma omp barrier
                 if (tid ==0){
                     cout << "Saving values..." << endl;
-                    writeTimeSnapshot(filename0, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                    writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                    writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+					printMSE(a, l, tp1, dt, dr, dtheta, M, N, O);
+					if (l%20 == 0){
+                    	writeTimeSnapshot(filename0, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+					}
+                    //writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                    //writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                     cout << "done." << endl;
                 }
 		        #pragma omp barrier
@@ -696,11 +717,15 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
             for (size_t m=0; m<M; m=round(mm)){
 				file <<std::fixed << std::setprecision(32) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, cual) << "\n";
 				file.flush();
-                mm += (double)(M-1)/99.0;
+                mm += (double)(M-1)/19.0;
             }
-            nn += (double)(N-1)/99.0;
+            nn += (double)(N-1)/19.0;
         }
-        oo += (double)(O-1)/2.0;
+		if (O==1){
+			oo+=1;
+		} else {
+        	oo += (double)(O-1)/2.0;
+		}
     }
     file.close();
 
