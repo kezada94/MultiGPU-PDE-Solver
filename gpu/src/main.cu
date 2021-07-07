@@ -21,22 +21,73 @@ const REAL PI = 3.14159265358979323846f;
 const size_t buffSize = 4;
 const size_t nfunctions= 3;
 
-void printMSE(REAL* a, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, size_t M, size_t N, size_t O){
+void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
 	double mse = 0;
-
-#pragma omp parallel for shared(mse) num_threads(16)
-	for(int theta=0; theta<N; theta++){
-		for(int r=0; r<M; r++){
-			double sum = 0;
-			sum = r*dr*dtheta*(REAL)theta*(1 - (REAL)theta*dtheta)*(1 - (REAL)r*dr)*(1+0.5*dt*l);
-			//sum = j*dr*(1 - j*dr)*i*dtheta*(1 - i*dtheta)*(1 + 0.5*l*dt);
-#pragma omp critical
-			mse += fabs(a[I(tp1, 0, theta, r)] - sum);
-		}
-	}
-	mse/=(M*N);
-	printf("MSE: %g\n", mse);
+   
+    #pragma omp parallel for shared(mse) num_threads(48)
+    for (size_t o=0; o<O; o++){
+        double nn = 0;
+        for (size_t n=0; n<N; n=round(nn)){
+            double mm = 0;
+            for (size_t m=0; m<M; m=round(mm)){
+                double sum = 0;
+                sum = p*(l*dt/L - o*dphi);
+                #pragma omp critical
+                mse += fabs(func[I(tp1, o, n, m)] - sum);
+                mm += (double)(M-1)/99.0;
+            }
+            nn += (double)(N-1)/99.0;
+        }
+    }
+	mse /= (1000*100*100);
+	printf("MSE G: %g\n", mse);
 }
+
+void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
+	double mse = 0;
+   
+    double oo = 0;
+    for (size_t o=0; o<O; o=round(oo)){
+        #pragma omp parallel for shared(mse) num_threads(48)
+        for (size_t n=0; n<N; n++){
+            double mm = 0;
+            for (size_t m=0; m<M; m=round(mm)){
+                double sum = 0;
+                sum = 1.0*(dtheta*n);
+                #pragma omp critical
+                mse += fabs(func[I(tp1, o, n, m)] - sum);
+                mm += (double)(M-1)/99.0;
+            }
+        }
+        oo += (double)(O-1)/99.0;
+    }
+	mse /= (1000*100*100);
+	printf("MSE F: %g\n", mse);
+}
+
+void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L, REAL* a_0){
+	double mse = 0;
+   
+    double newo = 0;
+    double inc = (O-1)/99.0;
+    #pragma omp parallel for shared(mse, inc) num_threads(48)
+    for (size_t o=0; o<100; o++){
+        double nn = 0;
+        for (size_t n=0; n<N; n=round(nn)){
+            for (size_t m=0; m<M; m++){
+                double sum = 0;
+                sum = a_0[m];
+                size_t oo = o*inc;
+                #pragma omp critical
+                mse += fabs(func[I(tp1, oo, n, m)] - sum);
+            }
+            nn += (double)(N-1)/99.0;
+        }
+    }
+	mse /= (1000*100*100);
+	printf("MSE F: %g\n", mse);
+}
+
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
 REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual);
@@ -254,7 +305,7 @@ int main(int argc, char *argv[]){
 
         // ESTADO 0, 1
 
-        for (int time=0; time<1; time++){
+        for (int time=0; time<2; time++){
             #pragma omp critical
             {
                 printf("GPU %i - Iteration %i: filling initial condition\n", tid, time);
@@ -361,6 +412,9 @@ int main(int argc, char *argv[]){
             #pragma omp barrier
             if (tid == 0){
 				//printMSE(a, time, time, dt, dr, dtheta, M, N, O);
+                printMSEa(a, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+                printMSEF(F, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+                printMSEG(G, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
                 writeTimeSnapshot(filename0, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
                 writeTimeSnapshot(filename1, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
                 writeTimeSnapshot(filename2, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
@@ -455,7 +509,7 @@ int main(int argc, char *argv[]){
             printBW(tid, tiempos, nGPU, bytes, "BW: ");
             #pragma omp barrier
 
-            if (l%10 == 0){
+            if (l%10 == 0 || true){
                 int time = tp1;
                 // Se copia el bloque de a+2 * theta+2 * phi (alfa y theta con halo, pero phi sin halo) esto debido a que los halos de phi se pueden sobreescribir entre tortas.
                 #pragma omp critical
@@ -486,6 +540,9 @@ int main(int argc, char *argv[]){
                 if (tid ==0){
                     cout << "Saving values..." << endl;
 					//printMSE(a, l, tp1, dt, dr, dtheta, M, N, O);
+                    printMSEa(a, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+                    printMSEF(F, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+                    printMSEG(G, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
                     writeTimeSnapshot(filename0, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
                     writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
                     writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
