@@ -233,9 +233,6 @@ int main(int argc, char *argv[]){
         cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
-        cudaFuncSetAttribute(computeSeconda, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        cudaFuncSetAttribute(computeSecondF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        cudaFuncSetAttribute(computeSecondG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
         cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
@@ -303,9 +300,9 @@ int main(int argc, char *argv[]){
         slices_ptrG[tid] = G_slice;
         
 
-        // ESTADO 0, 1
-
-        for (int time=0; time<2; time++){
+        // INITIAL CONDITION
+		// USING SLOT 1 as 0 will be used to store temporal halo
+        for (int time=1; time<3; time++){
             #pragma omp critical
             {
                 printf("GPU %i - Iteration %i: filling initial condition\n", tid, time);
@@ -411,7 +408,6 @@ int main(int argc, char *argv[]){
 
             #pragma omp barrier
             if (tid == 0){
-				//printMSE(a, time, time, dt, dr, dtheta, M, N, O);
                 printMSEa(a, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
                 printMSEF(F, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
                 printMSEG(G, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
@@ -424,8 +420,11 @@ int main(int argc, char *argv[]){
         }
 
 
+		fillTemporalGhostVolume<<<g, b>>>(a_slice, F_slice, G_slice, M, N, O, slicesStartIndex[tid], O, dt, p);
+
+
 		#pragma omp barrier
-        for (size_t l=2; l<niter; ++l){
+        for (size_t l=3; l<niter; ++l){
             size_t tp1 = l%buffSize;
             size_t t = (l-1)%buffSize;
             size_t tm1 = (l-2)%buffSize;
@@ -437,11 +436,7 @@ int main(int argc, char *argv[]){
                 printf("GPU %i - Iteration %i: computing state\n", tid, l);
             }
             cucheck( cudaEventRecord(inicio, 0));
-            if (l == 2) {
-                computeSecondIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
-            } else {
-                computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
-            }
+            computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
             cucheck( cudaEventRecord(fin, 0));
             cucheck( cudaEventSynchronize(fin));
             cucheck(cudaEventElapsedTime(&tiempos[tid], inicio, fin) );
