@@ -278,11 +278,11 @@ int main(int argc, char *argv[]){
     
 		dim3 eg, eb;
 		eb = dim3(BSIZEX, BSIZEY, BSIZEZ);
-		eg = dim3((M+2+b.x-1)/(b.x), (N+2+b.y-1)/b.y, (GPUWidth+2+b.z-1)/(b.z));
+		eg = dim3((M+2+eb.x-1)/(eb.x), (N+2+eb.y-1)/eb.y, (GPUWidth+2+eb.z-1)/(eb.z));
 
 		dim3 cg, cb;
 		cb = dim3(BSIZEX, BSIZEY, BSIZEZ);
-		cg = dim3((int)ceil(M/(float)BSIZEX-2), (int)ceil(N/(float)BSIZEX-2), (int)ceil(GPUWidth/(float)BSIZEZ-2));
+		cg = dim3((int)ceil(M/(float)(BSIZEX-2)), (int)ceil(N/(float)(BSIZEY-2)), (int)ceil(GPUWidth/(float)(BSIZEZ-2)));
 
         #pragma omp critical
         {
