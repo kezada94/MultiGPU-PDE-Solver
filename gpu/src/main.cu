@@ -218,7 +218,7 @@ int main(int argc, char *argv[]){
     REAL** slices_ptrG = new REAL*[nGPU];
     size_t* slices_widths = new size_t[nGPU];
 
-    size_t sharedMemorySizeb = (buffSize)*nfunctions*(BSIZEX+2)*(BSIZEY+2)*(BSIZEZ+2)*sizeof(REAL);
+    size_t sharedMemorySizeb = (buffSize)*nfunctions*(BSIZEX)*(BSIZEY)*(BSIZEZ)*sizeof(REAL);
     /*int carveout = 100;
     cudaFuncSetAttribute(computeFirsta, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     cudaFuncSetAttribute(computeFirstF, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
@@ -279,6 +279,10 @@ int main(int argc, char *argv[]){
 		dim3 eg, eb;
 		eb = dim3(BSIZEX, BSIZEY, BSIZEZ);
 		eg = dim3((M+2+b.x-1)/(b.x), (N+2+b.y-1)/b.y, (GPUWidth+2+b.z-1)/(b.z));
+
+		dim3 cg, cb;
+		cb = dim3(BSIZEX, BSIZEY, BSIZEZ);
+		cg = dim3((int)ceil(M/(float)BSIZEX-2), (int)ceil(N/(float)BSIZEX-2), (int)ceil(GPUWidth/(float)BSIZEZ-2));
 
         #pragma omp critical
         {
@@ -483,10 +487,9 @@ int main(int argc, char *argv[]){
             }
             cucheck( cudaEventRecord(inicio, 0));
             if(l==1){
-
-                computeFirstIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
+                computeFirstIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, cb, cg, sharedMemorySizeb);
             } else{
-                computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
+                computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, cb, cg, sharedMemorySizeb);
             }
             cucheck( cudaEventRecord(fin, 0));
             cucheck( cudaEventSynchronize(fin));
