@@ -40,7 +40,7 @@ void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         }
     }
 	mse /= (1000*100*100);
-	printf("MSE G: %g\n", mse);
+	printf("Mean Error G: %g\n", mse);
 }
 
 void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
@@ -62,7 +62,7 @@ void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         oo += (double)(O-1)/99.0;
     }
 	mse /= (1000*100*100);
-	printf("MSE F: %g\n", mse);
+	printf("Mean Error F: %g\n", mse);
 }
 
 void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L, REAL* a_0){
@@ -85,7 +85,7 @@ void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         }
     }
 	mse /= (1000*100*100);
-	printf("MSE F: %g\n", mse);
+	printf("Mean Error a: %g\n", mse);
 }
 
 
@@ -99,6 +99,7 @@ MatrixXcd getL_2(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, si
 MatrixXcd getL_3(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O);
 
 void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual);
+void writeTimeSnapshotWithHalo(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual);
 void printTime(int tid, float *times, int n, char* msg);
 void printBW(int tid, float *times, int n, size_t *byteCount, char* msg);
 
@@ -119,7 +120,7 @@ int main(int argc, char *argv[]){
     int q = atoi(argv[6]);
     int n = atoi(argv[7]);
     int nGPU = atoi(argv[8]);
-    bool boundary = atoi(argv[10]);
+    int boundaryType = atoi(argv[10]);
     size_t niter = atoi(argv[9]);
 
 
@@ -135,12 +136,15 @@ int main(int argc, char *argv[]){
     cucheck(cudaEventCreate(&stop));
 
     size_t slicesStartIndex[nGPU+1];
+    size_t slicesStartIndexExtended[nGPU+1];
     for (int i=0; i<nGPU; i++){
     	slicesStartIndex[i] = round((float)O/nGPU*i); 
-		cout << "Corte " << i << ":  "<< slicesStartIndex[i] << endl;
+    	slicesStartIndexExtended[i] = round((float)(O+2)/nGPU*i); 
+		cout << "Corte " << i << ":  "<< slicesStartIndex[i] << ", Extended: " << slicesStartIndexExtended[i] << endl;
     }
     slicesStartIndex[nGPU] = O; 
-    cout << "Corte " << nGPU << ":  "<< slicesStartIndex[nGPU] << endl;
+    slicesStartIndexExtended[nGPU] = O+2; 
+    cout << "Corte " << nGPU << ":  "<< slicesStartIndex[nGPU] << ", Extended: " << slicesStartIndexExtended[nGPU] << endl;
 
     REAL dr = 2.0*PI/(double)(M-1);
     REAL dtheta = PI/(double)(N-1);
@@ -233,7 +237,6 @@ int main(int argc, char *argv[]){
         cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
-
         cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeNextG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
@@ -260,6 +263,8 @@ int main(int argc, char *argv[]){
         cucheck(cudaEventCreate(&fin));
 
 		size_t GPUWidth = slicesStartIndex[tid+1] - slicesStartIndex[tid];
+		//size_t GPUWidthExtended = slicesStartIndexExtended[tid+1] - slicesStartIndexExtended[tid];
+		size_t GPUWidthExtended = GPUWidth+2;
 
         slices_widths[tid] = GPUWidth;
 
@@ -271,6 +276,15 @@ int main(int argc, char *argv[]){
 		b = dim3(BSIZEX, BSIZEY, BSIZEZ);
 		g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (GPUWidth+b.z-1)/(b.z));
     
+		dim3 eg, eb;
+		eb = dim3(BSIZEX, BSIZEY, BSIZEZ);
+		eg = dim3((M+2+b.x-1)/(b.x), (N+2+b.y-1)/b.y, (GPUWidth+2+b.z-1)/(b.z));
+
+        #pragma omp critical
+        {
+            printf("GPU %i: b(%i, %i, %i) - g(%i, %i, %i), Extended: b(%i, %i, %i) - g(%i, %i, %i)\n", tid, b.x, b.y, b.z, g.x, g.y, g.z, eb.x, eb.y, eb.z, eg.x, eg.y, eg.z);
+        }
+
         REAL *da_0;
         cucheck(cudaMalloc(&da_0, M*sizeof(REAL)));
         cucheck(cudaMemcpy(da_0, a_0, M*sizeof(REAL), cudaMemcpyHostToDevice));
@@ -302,7 +316,7 @@ int main(int argc, char *argv[]){
 
         // INITIAL CONDITION
 		// USING SLOT 1 as 0 will be used to store temporal halo
-        for (int time=1; time<3; time++){
+        for (int time=0; time<2; time++){
             #pragma omp critical
             {
                 printf("GPU %i - Iteration %i: filling initial condition\n", tid, time);
@@ -325,11 +339,19 @@ int main(int argc, char *argv[]){
             // CONDICION INICIAL
             #pragma omp critical
             {
-                printf("GPU %i - Iteration %i: filling boundary\n", tid, time);
+                printf("GPU %i - Iteration %i: filling boundary type %i\n", tid, time, boundaryType);
             }
 
             cucheck( cudaEventRecord(inicio, 0));
-            fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, time, time, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+            if (boundaryType == 0){
+                fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, time, time, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+            } else if (boundaryType == 1){
+                fillGhostPoints<<<eg, eb>>>(a_slice, time, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                cucheck(cudaDeviceSynchronize());
+                fillGhostPoints<<<eg, eb>>>(F_slice, time, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                cucheck(cudaDeviceSynchronize());
+                fillGhostPoints<<<eg, eb>>>(G_slice, time, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            }
             cucheck(cudaDeviceSynchronize());
             checkError();
 
@@ -385,16 +407,16 @@ int main(int argc, char *argv[]){
                 printf("GPU %i - Iteration %i: copying data back to host.\n", tid, time);
             }
             cucheck( cudaEventRecord(inicio, 0));
-            cucheck(cudaMemcpy(a + I(time, slicesStartIndex[tid], -1, -1), a_slice + (GPUWidth+2)*time*(M+2)*(N+2) + (1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
-            cucheck(cudaMemcpy(F + I(time, slicesStartIndex[tid], -1, -1), F_slice + (GPUWidth+2)*time*(M+2)*(N+2) + (1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
-            cucheck(cudaMemcpy(G + I(time, slicesStartIndex[tid], -1, -1), G_slice + (GPUWidth+2)*time*(M+2)*(N+2) + (1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));    
+            cucheck(cudaMemcpy(a + I(time, slicesStartIndex[tid]-1, -1, -1), a_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+            cucheck(cudaMemcpy(F + I(time, slicesStartIndex[tid]-1, -1, -1), F_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+            cucheck(cudaMemcpy(G + I(time, slicesStartIndex[tid]-1, -1, -1), G_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
             cucheck(cudaDeviceSynchronize());
             checkError();
 
             cucheck( cudaEventRecord(fin, 0));
             cucheck( cudaEventSynchronize(fin));
             cucheck(cudaEventElapsedTime(&tiempos[tid], inicio, fin) );
-            bytes[tid] = (GPUWidth)*(M+2)*(N+2)*sizeof(REAL)*3;
+            bytes[tid] = (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL)*3;
 
             #pragma omp barrier
             printTime(tid, tiempos, nGPU, "Took: ");
@@ -411,20 +433,44 @@ int main(int argc, char *argv[]){
                 printMSEa(a, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
                 printMSEF(F, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
                 printMSEG(G, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-                writeTimeSnapshot(filename0, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                writeTimeSnapshot(filename1, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                writeTimeSnapshot(filename2, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+                writeTimeSnapshotWithHalo(filename0, a, F, G, time, time, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+                writeTimeSnapshotWithHalo(filename1, a, F, G, time, time, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                writeTimeSnapshotWithHalo(filename2, a, F, G, time, time, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                 cout << "Written" << endl;
             }
             #pragma omp barrier
         }
 
 
-		fillTemporalGhostVolume<<<g, b>>>(a_slice, F_slice, G_slice, M, N, O, slicesStartIndex[tid], O, dt, p);
+        #pragma omp critical
+        {
+            printf("GPU %i - Copying state 1 to temporal ghost cells at t=-1.\n", omp_get_thread_num());
+        }
+		fillTemporalGhostVolume<<<eg, eb>>>(a_slice, F_slice, G_slice, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2, dt, p);
+        cucheck(cudaDeviceSynchronize());
+        #pragma omp critical
+        {
+            printf("GPU %i - done\n", tid);
+        }
+        if (boundaryType == 0){
+            fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, 3, 3, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+        } else if (boundaryType == 1){
+            fillGhostPoints<<<eg, eb>>>(a_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            cucheck(cudaDeviceSynchronize());
+            fillGhostPoints<<<eg, eb>>>(F_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            cucheck(cudaDeviceSynchronize());
+            fillGhostPoints<<<eg, eb>>>(G_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+        }
+        cucheck(cudaDeviceSynchronize());
+        checkError();
+        #pragma omp critical
+        {
+            printf("GPU %i - done\n", tid);
+        }
 
 
 		#pragma omp barrier
-        for (size_t l=3; l<niter; ++l){
+        for (size_t l=2; l<niter; ++l){
             size_t tp1 = l%buffSize;
             size_t t = (l-1)%buffSize;
             size_t tm1 = (l-2)%buffSize;
@@ -436,7 +482,12 @@ int main(int argc, char *argv[]){
                 printf("GPU %i - Iteration %i: computing state\n", tid, l);
             }
             cucheck( cudaEventRecord(inicio, 0));
-            computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
+            if(l==1){
+
+                computeFirstIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
+            } else{
+                computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
+            }
             cucheck( cudaEventRecord(fin, 0));
             cucheck( cudaEventSynchronize(fin));
             cucheck(cudaEventElapsedTime(&tiempos[tid], inicio, fin) );
@@ -452,7 +503,15 @@ int main(int argc, char *argv[]){
             }
 
             cucheck( cudaEventRecord(inicio, 0));
-            fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, l, tp1, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+            if (boundaryType == 0){
+                fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, l, tp1, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+            } else if (boundaryType == 1){
+                fillGhostPoints<<<eg, eb>>>(a_slice, tp1, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                cucheck(cudaDeviceSynchronize());
+                fillGhostPoints<<<eg, eb>>>(F_slice, tp1, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                cucheck(cudaDeviceSynchronize());
+                fillGhostPoints<<<eg, eb>>>(G_slice, tp1, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            }
             cucheck(cudaDeviceSynchronize());
             checkError();
             cucheck( cudaEventRecord(fin, 0));
@@ -513,9 +572,9 @@ int main(int argc, char *argv[]){
                 }
 
                 cucheck( cudaEventRecord(inicio, 0));
-                cucheck(cudaMemcpy(a + I(time, slicesStartIndex[tid], -1, -1), a_slice + (GPUWidth+2)*time*(M+2)*(N+2) + (1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
-                cucheck(cudaMemcpy(F + I(time, slicesStartIndex[tid], -1, -1), F_slice + (GPUWidth+2)*time*(M+2)*(N+2) + (1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
-                cucheck(cudaMemcpy(G + I(time, slicesStartIndex[tid], -1, -1), G_slice + (GPUWidth+2)*time*(M+2)*(N+2) + (1)*(M+2)*(N+2), (GPUWidth)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));    
+                cucheck(cudaMemcpy(a + I(time, slicesStartIndex[tid]-1, -1, -1), a_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+                cucheck(cudaMemcpy(F + I(time, slicesStartIndex[tid]-1, -1, -1), F_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+                cucheck(cudaMemcpy(G + I(time, slicesStartIndex[tid]-1, -1, -1), G_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
                 cucheck(cudaDeviceSynchronize());
                 checkError();
                 cucheck( cudaEventRecord(fin, 0));
@@ -538,9 +597,9 @@ int main(int argc, char *argv[]){
                     printMSEa(a, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
                     printMSEF(F, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
                     printMSEG(G, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-                    writeTimeSnapshot(filename0, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                    writeTimeSnapshot(filename1, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                    writeTimeSnapshot(filename2, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+                    writeTimeSnapshotWithHalo(filename0, a, F, G, tp1, t, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+                    writeTimeSnapshotWithHalo(filename1, a, F, G, tp1, t, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                    writeTimeSnapshotWithHalo(filename2, a, F, G, tp1, t, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                     cout << "done." << endl;
                 }
 		        #pragma omp barrier
@@ -775,6 +834,44 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
 			oo+=1;
 		} else {
         	oo += (double)(O-1)/2.0;
+		}
+    }
+    file.close();
+
+}
+void writeTimeSnapshotWithHalo(string filename, REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual){
+    int count = 0;
+    ofstream file;
+    //file.open(filename);
+    file.open(filename, std::ofstream::app);
+	if (!file.is_open()){
+		std::cerr << "didn't write" << std::endl;
+	}
+    double oo = 0;
+    for (size_t o=0; o<O; o=round(oo)){
+    	cout << o << endl;
+        double nn = 0;
+            for (size_t n=0; n<N; n=round(nn)){
+            double mm = 0;
+            for (size_t m=0; m<M; m=round(mm)){
+                REAL val;
+                if (cual == 0){
+                        val = a[E(t, o, n, m)];//t00;
+                } else if (cual == 1){
+                        val = F[E(t, o, n, m)];//t00;
+                } else if (cual == 2){
+                        val = G[E(t, o, n, m)];//t00;
+                }
+				file <<std::fixed << std::setprecision(32) << val << "\n";
+				file.flush();
+                mm += (double)(M-1)/21.0;
+            }
+            nn += (double)(N-1)/21.0;
+        }
+		if (O==1){
+			oo+=1;
+		} else {
+        	oo += (double)(O-1)/7.0;
 		}
     }
     file.close();
