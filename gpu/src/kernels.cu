@@ -56,6 +56,11 @@ __global__ void fillTemporalGhostVolume(REAL* a, REAL* F, REAL *G, size_t M, siz
 	int theta = blockIdx.y*blockDim.y + threadIdx.y;
 	int phi = blockIdx.z*blockDim.z + threadIdx.z;
 
+    // Sizes with halo
+    M += 2;
+    N += 2;
+    O += 2;
+
 	if (r<M && theta<N && phi<O){
 		a[E(3, phi, theta, r)] = a[E(1, phi, theta, r)];
 		F[E(3, phi, theta, r)] = F[E(1, phi, theta, r)];
@@ -67,7 +72,12 @@ __global__ void fillGhostPoints(REAL* a, size_t t, size_t M, size_t N, size_t O,
 	int r = blockIdx.x*blockDim.x + threadIdx.x;
 	int theta = blockIdx.y*blockDim.y + threadIdx.y;
 	int phi = blockIdx.z*blockDim.z + threadIdx.z;
-	int global_phi = phi + phi_offset;
+	int global_phi = phi + phi_offset - 1;
+
+    // Sizes with halo
+    M += 2;
+    N += 2;
+    O += 2;
 
     if (r >= M || theta >= N || phi >= O){
         return;
@@ -90,11 +100,11 @@ __global__ void fillGhostPoints(REAL* a, size_t t, size_t M, size_t N, size_t O,
         a[E(t, phi, theta, r)] = a[E(t, phi, theta-2, r)];
     }
     // Top
-    if (global_phi == 0){
+    if (global_phi == -1){
         a[E(t, phi, theta, r)] = a[E(t, phi+2, theta, r)];
     }
     // Bottom
-    if (global_phi == globalWidth-1){
+    if (global_phi == globalWidth){
         a[E(t, phi, theta, r)] = a[E(t, phi-2, theta, r)];
     }
 
@@ -117,7 +127,7 @@ __global__ void fillGhostPoints(REAL* a, size_t t, size_t M, size_t N, size_t O,
     }
 
     // Now border of halo in Z[-1]
-    if (global_phi == 0){
+    if (global_phi == -1){
         // Left
         if (r == 0){
             a[E(t, phi, theta, r)] = a[E(t, phi+2, theta, r+2)];
@@ -155,7 +165,7 @@ __global__ void fillGhostPoints(REAL* a, size_t t, size_t M, size_t N, size_t O,
     }
 
     // Now border of halo in Z[+1]
-    if (global_phi == globalWidth-1){
+    if (global_phi == globalWidth){
         // Left
         if (r == 0){
             a[E(t, phi, theta, r)] = a[E(t, phi-2, theta, r+2)];

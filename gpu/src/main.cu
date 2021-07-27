@@ -123,7 +123,6 @@ int main(int argc, char *argv[]){
     int boundaryType = atoi(argv[10]);
     size_t niter = atoi(argv[9]);
 
-
     if (nGPU < 0){
         cout << "Se necesitan al menos 3 gpus de 40gb para un problema de 1000x1000x1000." << endl;
         exit(-1);
@@ -136,15 +135,12 @@ int main(int argc, char *argv[]){
     cucheck(cudaEventCreate(&stop));
 
     size_t slicesStartIndex[nGPU+1];
-    size_t slicesStartIndexExtended[nGPU+1];
     for (int i=0; i<nGPU; i++){
     	slicesStartIndex[i] = round((float)O/nGPU*i); 
-    	slicesStartIndexExtended[i] = round((float)(O+2)/nGPU*i); 
-		cout << "Corte " << i << ":  "<< slicesStartIndex[i] << ", Extended: " << slicesStartIndexExtended[i] << endl;
+		cout << "Corte " << i << ":  "<< slicesStartIndex[i] << endl;
     }
     slicesStartIndex[nGPU] = O; 
-    slicesStartIndexExtended[nGPU] = O+2; 
-    cout << "Corte " << nGPU << ":  "<< slicesStartIndex[nGPU] << ", Extended: " << slicesStartIndexExtended[nGPU] << endl;
+    cout << "Corte " << nGPU << ":  "<< slicesStartIndex[nGPU]  << endl;
 
     REAL dr = 2.0*PI/(double)(M-1);
     REAL dtheta = PI/(double)(N-1);
@@ -264,7 +260,6 @@ int main(int argc, char *argv[]){
 
 		size_t GPUWidth = slicesStartIndex[tid+1] - slicesStartIndex[tid];
 		//size_t GPUWidthExtended = slicesStartIndexExtended[tid+1] - slicesStartIndexExtended[tid];
-		size_t GPUWidthExtended = GPUWidth+2;
 
         slices_widths[tid] = GPUWidth;
 
@@ -272,14 +267,17 @@ int main(int argc, char *argv[]){
         {
 		    cout << "GPU " << tid << " works " << GPUWidth << " elements. Starting at " << slicesStartIndex[tid] <<  endl;
         }
+        // Un grid pensado en que los bloques no estan sobre el hal (solo operan elementos internos)
 		dim3 g, b;
 		b = dim3(BSIZEX, BSIZEY, BSIZEZ);
 		g = dim3((M+b.x-1)/(b.x), (N+b.y-1)/b.y, (GPUWidth+b.z-1)/(b.z));
     
+        // Un grid considerando que no hay traslape y los bloques operan elementos del halo
 		dim3 eg, eb;
 		eb = dim3(BSIZEX, BSIZEY, BSIZEZ);
 		eg = dim3((M+2+eb.x-1)/(eb.x), (N+2+eb.y-1)/eb.y, (GPUWidth+2+eb.z-1)/(eb.z));
 
+        // Un grid considerando que los bloques se traslapan y estan sobre el halo global
 		dim3 cg, cb;
 		cb = dim3(BSIZEX, BSIZEY, BSIZEZ);
 		cg = dim3((int)ceil(M/(float)(BSIZEX-2)), (int)ceil(N/(float)(BSIZEY-2)), (int)ceil(GPUWidth/(float)(BSIZEZ-2)));
@@ -287,6 +285,7 @@ int main(int argc, char *argv[]){
         #pragma omp critical
         {
             printf("GPU %i: b(%i, %i, %i) - g(%i, %i, %i), Extended: b(%i, %i, %i) - g(%i, %i, %i)\n", tid, b.x, b.y, b.z, g.x, g.y, g.z, eb.x, eb.y, eb.z, eg.x, eg.y, eg.z);
+            printf("GPU %i: compressed: b(%i, %i, %i) - g(%i, %i, %i)\n", tid, cb.x, cb.y, cb.z, cg.x, cg.y, cg.z);
         }
 
         REAL *da_0;
@@ -350,11 +349,11 @@ int main(int argc, char *argv[]){
             if (boundaryType == 0){
                 fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, time, time, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
             } else if (boundaryType == 1){
-                fillGhostPoints<<<eg, eb>>>(a_slice, time, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                fillGhostPoints<<<eg, eb>>>(a_slice, time, M, N, GPUWidth, slicesStartIndex[tid], O);
                 cucheck(cudaDeviceSynchronize());
-                fillGhostPoints<<<eg, eb>>>(F_slice, time, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                fillGhostPoints<<<eg, eb>>>(F_slice, time, M, N, GPUWidth, slicesStartIndex[tid], O);
                 cucheck(cudaDeviceSynchronize());
-                fillGhostPoints<<<eg, eb>>>(G_slice, time, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                fillGhostPoints<<<eg, eb>>>(G_slice, time, M, N, GPUWidth, slicesStartIndex[tid], O);
             }
             cucheck(cudaDeviceSynchronize());
             checkError();
@@ -450,7 +449,7 @@ int main(int argc, char *argv[]){
         {
             printf("GPU %i - Copying state 1 to temporal ghost cells at t=-1.\n", omp_get_thread_num());
         }
-		fillTemporalGhostVolume<<<eg, eb>>>(a_slice, F_slice, G_slice, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2, dt, p);
+		fillTemporalGhostVolume<<<eg, eb>>>(a_slice, F_slice, G_slice, M, N, GPUWidth, slicesStartIndex[tid], O, dt, p);
         cucheck(cudaDeviceSynchronize());
         #pragma omp critical
         {
@@ -459,11 +458,11 @@ int main(int argc, char *argv[]){
         if (boundaryType == 0){
             fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, 3, 3, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
         } else if (boundaryType == 1){
-            fillGhostPoints<<<eg, eb>>>(a_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            fillGhostPoints<<<eg, eb>>>(a_slice, 3, M, N, GPUWidth, slicesStartIndex[tid], O);
             cucheck(cudaDeviceSynchronize());
-            fillGhostPoints<<<eg, eb>>>(F_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            fillGhostPoints<<<eg, eb>>>(F_slice, 3, M, N, GPUWidth, slicesStartIndex[tid], O);
             cucheck(cudaDeviceSynchronize());
-            fillGhostPoints<<<eg, eb>>>(G_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            fillGhostPoints<<<eg, eb>>>(G_slice, 3, M, N, GPUWidth, slicesStartIndex[tid], O);
         }
         cucheck(cudaDeviceSynchronize());
         checkError();
@@ -509,11 +508,11 @@ int main(int argc, char *argv[]){
             if (boundaryType == 0){
                 fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, l, tp1, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
             } else if (boundaryType == 1){
-                fillGhostPoints<<<eg, eb>>>(a_slice, tp1, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                fillGhostPoints<<<eg, eb>>>(a_slice, tp1, M, N, GPUWidth, slicesStartIndex[tid], O);
                 cucheck(cudaDeviceSynchronize());
-                fillGhostPoints<<<eg, eb>>>(F_slice, tp1, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                fillGhostPoints<<<eg, eb>>>(F_slice, tp1, M, N, GPUWidth, slicesStartIndex[tid], O);
                 cucheck(cudaDeviceSynchronize());
-                fillGhostPoints<<<eg, eb>>>(G_slice, tp1, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+                fillGhostPoints<<<eg, eb>>>(G_slice, tp1, M, N, GPUWidth, slicesStartIndex[tid], O);
             }
             cucheck(cudaDeviceSynchronize());
             checkError();

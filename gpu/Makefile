@@ -7,7 +7,7 @@ NVCC_FLAGS=-Xcompiler -fopenmp --disable-warnings -gencode=arch=compute_80,code=
 LIBS= 
 BSIZEX=32
 BSIZEY=4
-BSIZEZ=3
+BSIZEZ=4
 DEFINES=-DBSIZEX=${BSIZEX} -DBSIZEY=${BSIZEY} -DBSIZEZ=${BSIZEZ}
 INCLUDES=-I../vendor/eigen-3.3.9
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)
