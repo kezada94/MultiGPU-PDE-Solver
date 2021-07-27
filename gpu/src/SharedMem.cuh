@@ -2,7 +2,7 @@
 
 #include "defines.h"
 
-__device__ inline void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, size_t M, size_t N, size_t O, size_t global_phi, int r, int theta, int phi){
+__device__ inline void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, size_t M, size_t N, size_t O, int r, int theta, int phi){
 
     // Cada hilo copia el valor que le corresponde dentro del volumen por cada uno de los 4 tiempos
     for (size_t i = 0; i < 4; i++) {
@@ -12,7 +12,7 @@ __device__ inline void fillSharedMemory(REAL* sh, REAL *a, REAL *F, REAL *G, siz
     }
 }
 
-__device__ inline void copySharedMemoryToGlobal(REAL* sh, REAL *func, int funcIndex, size_t M, size_t N, size_t O, size_t global_phi, int r, int theta, int phi, size_t tp1){
+__device__ inline void copySharedMemoryToGlobal(REAL* sh, REAL *func, int funcIndex, size_t M, size_t N, size_t O, size_t global_phi, int r, int theta, int phi, size_t tp1, int3 tid){
     // Cada hilo copia el valor que le corresponde dentro del volumen por cada uno de los 4 tiempos
-    func[E(tp1, phi, theta, r)] = sh[CI(funcIndex, tp1, threadIdx.z, threadIdx.y, threadIdx.x)];
+    func[E(tp1, phi, theta, r)] = sh[CI(funcIndex, tp1, tid.z, tid.y, tid.x)];
 }

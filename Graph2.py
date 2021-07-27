@@ -28,12 +28,15 @@ elif t==1:
 else:
     Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-G.dat", delimiter="\n")
 
-
-Z = Z.reshape((-1, 3, 100, 100))
+np.set_printoptions(edgeitems=30, linewidth=100000)
+Z = Z.reshape((-1, 8, 22, 22))
+what = 1
+for i in range(Z[what].shape[0]):
+    print(np.round(Z[what, i]))
+Z = Z[:, 1:-1, 1:-1, 1:-1]
 
 L = Z.shape[0]
 print(Z.shape)
-
 
 l = 0
 data = Z[l]#, 1:-1, 1:-1, 1:-1]
