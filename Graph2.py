@@ -28,12 +28,13 @@ elif t==1:
 else:
     Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-G.dat", delimiter="\n")
 
-
-Z = Z.reshape((-1, 3, 100, 100))
+np.set_printoptions(edgeitems=30, linewidth=100000)
+Z = Z.reshape((-1, 30, 50, 50))
+what = 1
+Z = Z[:, 1:-1, 1:-1, 1:-1]
 
 L = Z.shape[0]
 print(Z.shape)
-
 
 l = 0
 data = Z[l]#, 1:-1, 1:-1, 1:-1]
@@ -50,7 +51,7 @@ d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
 d2[..., 0] = scale/scale.max() * (255.)
 d2[..., 1] = scale/scale.max() * (255.)
 d2[..., 2] = 255# - scale/scale.max() * (255.)
-d2[..., 3] = 200
+d2[..., 3] = 30
 d2[:, 0, 0] = [255,0,0,250]
 d2[0, :, 0] = [0,255,0,250]
 d2[0, 0, :] = [0,0,255,250]
@@ -96,19 +97,19 @@ def update():
     ## update volume colors
     #data = Z[l, :, :, :]
     data = Z[l]#, 1:-1, 1:-1, 1:-1]
-    interr = (data - (data.min()))
+    interr = data#(data - (data.min()))
     print("Valor maximo:", data.max())
     print("T00 minimo:", data.min())
     scale = (interr )#np.clip(interr, 0, interr.max())
     positive = (np.clip(scale, 0.0000, scale.max()))#np.clip(interr, 0, interr.max())
     negative = (np.clip(-scale, 0.0000, -scale.min()))
     d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
-    #d2[..., 0] = positive/positive.max() * (255.)
-    #d2[..., 1] = negative/negative.max() * (255.)
-    d2[..., 0] = scale/scale.max() * (255.)
-    d2[..., 1] = scale/scale.max() * (255.)
+    d2[..., 0] = positive/positive.max() * (255.)
+    d2[..., 1] = negative/negative.max() * (255.)
+    #d2[..., 0] = scale/scale.max() * (255.)
+    #d2[..., 1] = scale/scale.max() * (255.)
     d2[..., 2] = 255# - scale/scale.max() * (255.)
-    d2[..., 3] = 200
+    d2[..., 3] = 30
 
 
 
@@ -129,4 +130,6 @@ if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
+
+
 
