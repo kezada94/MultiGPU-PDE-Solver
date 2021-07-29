@@ -40,7 +40,7 @@ void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_
 }
 
 void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size_t t, size_t tm1, size_t tm2, size_t M, size_t N, size_t O, size_t phi_offset, size_t globalWidth, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0, dim3 b, dim3 g, size_t sharedMemorySizeb){
-
+/*
 	computeFirsta<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
     cucheck(cudaDeviceSynchronize());
 
@@ -48,18 +48,19 @@ void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t tp1, size
     cucheck(cudaDeviceSynchronize());
 
 	computeFirstG<<<g, b, sharedMemorySizeb>>>(a, F, G, l, tp1, t, tm1, tm2, M, N, O, phi_offset, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-    cucheck(cudaDeviceSynchronize());
+    cucheck(cudaDeviceSynchronize());*/
 }
 
-__global__ void fillTemporalGhostVolume(REAL* a, REAL* F, REAL *G, size_t M, size_t N, size_t O, size_t phi_offset, size_t globalWidth, REAL dt, REAL p){
+__global__ void fillTemporalGhostVolume(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t M, size_t N, size_t O, size_t phi_offset, size_t globalWidth, REAL dt, REAL dphi, REAL dtheta, REAL dr, REAL p){
 	int r = blockIdx.x*blockDim.x + threadIdx.x;
 	int theta = blockIdx.y*blockDim.y + threadIdx.y;
 	int phi = blockIdx.z*blockDim.z + threadIdx.z;
+	int global_phi = phi+phi_offset;
 
 	if (r<M && theta<N && phi<O){
-		a[E(3, phi, theta, r)] = a[E(1, phi, theta, r)];
-		F[E(3, phi, theta, r)] = F[E(1, phi, theta, r)];
-		G[E(3, phi, theta, r)] = G[E(1, phi, theta, r)] - 2*dt*p;
+		a[I(tm1, phi, theta, r)] = a[I(t, phi, theta, r)] - 2*dt*PI_4;
+		F[I(tm1, phi, theta, r)] = F[I(t, phi, theta, r)] - 2*dt*PI_5;
+		G[I(tm1, phi, theta, r)] = G[I(t, phi, theta, r)] - 2*dt*p*PI_6;
 	}
 }
 
