@@ -18,7 +18,7 @@ using namespace Eigen;
 using namespace std;
 
 const REAL PI = 3.14159265358979323846f;
-const size_t buffSize = 4;
+const size_t buffSize = BUFF_SIZE;
 const size_t nfunctions= 3;
 
 void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){

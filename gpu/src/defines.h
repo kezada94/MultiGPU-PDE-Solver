@@ -32,9 +32,10 @@
    }
 
 #define GHOST_SIZE 2
+#define BUFF_SIZE 4
 #define I(t, phi, theta, r) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (phi+1)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (theta+1)*(M+GHOST_SIZE) + r+1
 #define E(t, phi, theta, r) (t)*(O)*(N)*(M) + (phi)*(N)*(M) + (theta)*(M) + r
-#define CI(func, t, phi, theta, r) (func)*4*(blockDim.z+GHOST_SIZE)*(blockDim.y+GHOST_SIZE)*(blockDim.x+GHOST_SIZE) + (t)*(blockDim.z+GHOST_SIZE)*(blockDim.y+GHOST_SIZE)*(blockDim.x+GHOST_SIZE) + (phi+1)*(blockDim.y+GHOST_SIZE)*(blockDim.x+GHOST_SIZE) + (theta+1)*(blockDim.x+GHOST_SIZE) + r+1
+#define CI(func, t, phi, theta, r) (func)*(BUFF_SIZE)*(blockDim.z+GHOST_SIZE)*(blockDim.y+GHOST_SIZE)*(blockDim.x+GHOST_SIZE) + (t)*(blockDim.z+GHOST_SIZE)*(blockDim.y+GHOST_SIZE)*(blockDim.x+GHOST_SIZE) + (phi+1)*(blockDim.y+GHOST_SIZE)*(blockDim.x+GHOST_SIZE) + (theta+1)*(blockDim.x+GHOST_SIZE) + r+1
 
 
 #define E1 0.000
