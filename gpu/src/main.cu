@@ -233,9 +233,9 @@ int main(int argc, char *argv[]){
     cudaFuncSetAttribute(computeNextG, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);*/
     for (int i=0; i<nGPU; i++){
         cudaSetDevice(i);
-        cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
-        cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeFirsta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeFirstF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
+        //cudaFuncSetAttribute(computeFirstG, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
 
         cudaFuncSetAttribute(computeNexta, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
         cudaFuncSetAttribute(computeNextF, cudaFuncAttributeMaxDynamicSharedMemorySize, sharedMemorySizeb);
@@ -429,7 +429,7 @@ int main(int argc, char *argv[]){
 
 
             #pragma omp barrier
-            if (tid == 0 && time != 0){
+            if (tid == 0){
                 printMSEa(a, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
                 //printMSEF(F, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
                 //printMSEG(G, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
@@ -446,7 +446,17 @@ int main(int argc, char *argv[]){
         {
             printf("GPU %i - Copying state 1 to temporal ghost cells at t=-1.\n", omp_get_thread_num());
         }
-		fillTemporalGhostVolume<<<eg, eb>>>(a_slice, F_slice, G_slice, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2, dt, p);
+		fillTemporalGhostVolume<<<g, b>>>(a_slice, F_slice, G_slice, 1, 3, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dphi, dtheta, dr, p);
+        cucheck(cudaDeviceSynchronize());
+        if (boundaryType == 0){
+            fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, 3, 3, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
+        } else if (boundaryType == 1){
+            fillGhostPoints<<<eg, eb>>>(a_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            cucheck(cudaDeviceSynchronize());
+            fillGhostPoints<<<eg, eb>>>(F_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+            cucheck(cudaDeviceSynchronize());
+            fillGhostPoints<<<eg, eb>>>(G_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
+        }
         cucheck(cudaDeviceSynchronize());
         #pragma omp critical
         {
@@ -547,7 +557,7 @@ int main(int argc, char *argv[]){
             printBW(tid, tiempos, nGPU, bytes, "BW: ");
             #pragma omp barrier
 
-            if (l%5 == 0){
+            if (true){
                 int time = tp1;
                 // Se copia el bloque de a+2 * theta+2 * phi (alfa y theta con halo, pero phi sin halo) esto debido a que los halos de phi se pueden sobreescribir entre tortas.
                 #pragma omp critical
