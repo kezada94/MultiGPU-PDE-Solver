@@ -429,13 +429,13 @@ int main(int argc, char *argv[]){
 
 
             #pragma omp barrier
-            if (tid == 0){
+            if (tid == 0 && time != 0){
                 printMSEa(a, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
-                printMSEF(F, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-                printMSEG(G, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-                writeTimeSnapshotWithHalo(filename0, a, F, G, time, time, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                writeTimeSnapshotWithHalo(filename1, a, F, G, time, time, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                writeTimeSnapshotWithHalo(filename2, a, F, G, time, time, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+                //printMSEF(F, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+                //printMSEG(G, time, time, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+                //writeTimeSnapshot(filename, a, F, G, time, time-1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+                //writeTimeSnapshotWithHalo(filename1, a, F, G, time, time, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                //writeTimeSnapshotWithHalo(filename2, a, F, G, time, time, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                 cout << "Written" << endl;
             }
             #pragma omp barrier
@@ -448,21 +448,6 @@ int main(int argc, char *argv[]){
         }
 		fillTemporalGhostVolume<<<eg, eb>>>(a_slice, F_slice, G_slice, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2, dt, p);
         cucheck(cudaDeviceSynchronize());
-        #pragma omp critical
-        {
-            printf("GPU %i - done\n", tid);
-        }
-        if (boundaryType == 0){
-            fillDirichletBoundary<<<g, b>>>(a_slice, F_slice, G_slice, 3, 3, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0);
-        } else if (boundaryType == 1){
-            fillGhostPoints<<<eg, eb>>>(a_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
-            cucheck(cudaDeviceSynchronize());
-            fillGhostPoints<<<eg, eb>>>(F_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
-            cucheck(cudaDeviceSynchronize());
-            fillGhostPoints<<<eg, eb>>>(G_slice, 3, M+2, N+2, GPUWidthExtended, slicesStartIndex[tid], O+2);
-        }
-        cucheck(cudaDeviceSynchronize());
-        checkError();
         #pragma omp critical
         {
             printf("GPU %i - done\n", tid);
@@ -483,7 +468,6 @@ int main(int argc, char *argv[]){
             }
             cucheck( cudaEventRecord(inicio, 0));
             if(l==1){
-
                 computeFirstIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
             } else{
                 computeNextIteration(a_slice, F_slice, G_slice, l, tp1, t, tm1, tm2, M, N, GPUWidth, slicesStartIndex[tid], O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, da_0, b, g, sharedMemorySizeb);
@@ -563,7 +547,7 @@ int main(int argc, char *argv[]){
             printBW(tid, tiempos, nGPU, bytes, "BW: ");
             #pragma omp barrier
 
-            if (l%10 == 0 || true){
+            if (l%5 == 0){
                 int time = tp1;
                 // Se copia el bloque de a+2 * theta+2 * phi (alfa y theta con halo, pero phi sin halo) esto debido a que los halos de phi se pueden sobreescribir entre tortas.
                 #pragma omp critical
@@ -572,15 +556,22 @@ int main(int argc, char *argv[]){
                 }
 
                 cucheck( cudaEventRecord(inicio, 0));
+                //t
+                cucheck(cudaMemcpy(a + I(t, slicesStartIndex[tid]-1, -1, -1), a_slice + (GPUWidth+2)*t*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+                cucheck(cudaMemcpy(F + I(t, slicesStartIndex[tid]-1, -1, -1), F_slice + (GPUWidth+2)*t*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+                cucheck(cudaMemcpy(G + I(t, slicesStartIndex[tid]-1, -1, -1), G_slice + (GPUWidth+2)*t*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+
+                //t+1
                 cucheck(cudaMemcpy(a + I(time, slicesStartIndex[tid]-1, -1, -1), a_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
                 cucheck(cudaMemcpy(F + I(time, slicesStartIndex[tid]-1, -1, -1), F_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
                 cucheck(cudaMemcpy(G + I(time, slicesStartIndex[tid]-1, -1, -1), G_slice + (GPUWidth+2)*time*(M+2)*(N+2), (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL), cudaMemcpyDeviceToHost));
+
                 cucheck(cudaDeviceSynchronize());
                 checkError();
                 cucheck( cudaEventRecord(fin, 0));
                 cucheck( cudaEventSynchronize(fin));
                 cucheck(cudaEventElapsedTime(&tiempos[tid], inicio, fin) );
-                bytes[tid] = (GPUWidth)*(M+2)*(N+2)*sizeof(REAL)*3;
+                bytes[tid] = (GPUWidth+2)*(M+2)*(N+2)*sizeof(REAL)*3*2;
 
                 #pragma omp barrier
                 printTime(tid, tiempos, nGPU, "Done.\nTook: ");
@@ -593,13 +584,12 @@ int main(int argc, char *argv[]){
 		        #pragma omp barrier
                 if (tid ==0){
                     cout << "Saving values..." << endl;
-					//printMSE(a, l, tp1, dt, dr, dtheta, M, N, O);
                     printMSEa(a, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
-                    printMSEF(F, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-                    printMSEG(G, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-                    writeTimeSnapshotWithHalo(filename0, a, F, G, tp1, t, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-                    writeTimeSnapshotWithHalo(filename1, a, F, G, tp1, t, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-                    writeTimeSnapshotWithHalo(filename2, a, F, G, tp1, t, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+                    //printMSEF(F, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+                    //printMSEG(G, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+                    //writeTimeSnapshot(filename, a, F, G, tp1, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+                    //writeTimeSnapshot(filename1, a, F, G, tp1, t, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+                    //writeTimeSnapshot(filename2, a, F, G, tp1, t, M+2, N+2, O+2, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
                     cout << "done." << endl;
                 }
 		        #pragma omp barrier
@@ -748,9 +738,9 @@ static MatrixXcd t3 = [] {
 }();
 
 MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
-    REAL anow = a[I(t, r, theta, phi)];
-    REAL Fnow = F[I(t, r, theta, phi)];
-    REAL Gnow = G[I(t, r, theta, phi)];
+    REAL anow = a[I(t, phi, theta, r)];
+    REAL Fnow = F[I(t, phi, theta, r)];
+    REAL Gnow = G[I(t, phi, theta, r)];
     REAL n1 = sin(Fnow)*cos(Gnow);
     REAL n2 = sin(Fnow)*sin(Gnow);
     REAL n3 = cos(Fnow);
@@ -758,9 +748,9 @@ MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size
     return U;
 }
 MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
-    REAL anow = a[I(t, r, theta, phi)];
-    REAL Fnow = F[I(t, r, theta, phi)];
-    REAL Gnow = G[I(t, r, theta, phi)];
+    REAL anow = a[I(t, phi, theta, r)];
+    REAL Fnow = F[I(t, phi, theta, r)];
+    REAL Gnow = G[I(t, phi, theta, r)];
     REAL n1 = sin(Fnow)*cos(Gnow);
     REAL n2 = sin(Fnow)*sin(Gnow);
     REAL n3 = cos(Fnow);
@@ -773,13 +763,13 @@ MatrixXcd getF(MatrixXcd L1, MatrixXcd L2){
 }
 
 REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual){
-	if (cual == 0){
+	/*if (cual == 0){
             return a[I(t, phi, theta, r)];//t00;
 	} else if (cual == 1){
 	    	return F[I(t, phi, theta, r)];//t00;
 	} else if (cual == 2){
     	    return G[I(t, phi, theta, r)];//t00;
-	}
+	}*/
     MatrixXcd Um1 = getUm1(a, F, G, t, r, theta, phi, M, N, O);
     MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, tm1, r, theta, phi, M, N, O))/dt); 
     MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/(dr)); 
@@ -788,9 +778,8 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
     //REAL K = 4970.25;
     REAL K = 2.0;
     complex<double> cons = -K/2.0f;
-    REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(L_0*L_0 + 0*L_1*L_1 +0*L_2*L_2 +0*L_3*L_3)//).trace()).real();
-                        + 0*lambda/4.0*(-1.0*getF(L_0, L_0)*getF(L_0, L_0)
-                                    +getF(L_0, L_1)*getF(L_0, L_1)
+    REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(L_0*L_0 + L_1*L_1 +L_2*L_2 +L_3*L_3)//).trace()).real();
+                        +lambda/4.0*(getF(L_0, L_1)*getF(L_0, L_1)
                                     +getF(L_0, L_2)*getF(L_0, L_2)
                                     +getF(L_0, L_3)*getF(L_0, L_3)
                             	    -(-1.0/4.0*(getF(L_0, L_1)*getF(L_0, L_1)
@@ -817,23 +806,23 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
 	if (!file.is_open()){
 		std::cerr << "didn't write" << std::endl;
 	}
-    double oo = 0;
-    for (size_t o=0; o<O; o=round(oo)){
+    double oo = 1;
+    for (size_t o=1; o<O; o=round(oo)){
     	cout << o << endl;
-        double nn = 0;
-            for (size_t n=0; n<N; n=round(nn)){
-            double mm = 0;
-            for (size_t m=0; m<M; m=round(mm)){
+        double nn = 1;
+            for (size_t n=1; n<N; n=round(nn)){
+            double mm = 1;
+            for (size_t m=1; m<M; m=round(mm)){
 				file <<std::fixed << std::setprecision(32) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, cual) << "\n";
 				file.flush();
-                mm += (double)(M-1)/19.0;
+                mm += (double)(M-2)/49.0;
             }
-            nn += (double)(N-1)/19.0;
+            nn += (double)(N-2)/49.0;
         }
 		if (O==1){
 			oo+=1;
 		} else {
-        	oo += (double)(O-1)/2.0;
+        	oo += (double)(O-2)/29.0;
 		}
     }
     file.close();
