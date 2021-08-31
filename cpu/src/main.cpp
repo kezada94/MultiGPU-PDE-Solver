@@ -20,7 +20,72 @@ using namespace std;
 const REAL PI = 3.14159265358979323846f;
 const size_t buffSize = 4;
 const size_t nfunctions= 3;
+void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
+	double mse = 0;
+   
+    #pragma omp parallel for shared(mse) num_threads(48)
+    for (size_t o=0; o<O; o++){
+        double nn = 0;
+        for (size_t n=0; n<N; n=round(nn)){
+            double mm = 0;
+            for (size_t m=0; m<M; m=round(mm)){
+                double sum = 0;
+                sum = p*(l*dt/L - o*dphi);
+                #pragma omp critical
+                mse += fabs(func[I(tp1, o, n, m)] - sum);
+                mm += (double)(M-1)/99.0;
+            }
+            nn += (double)(N-1)/99.0;
+        }
+    }
+	mse /= (1000*100*100);
+	printf("Mean Error G: %g\n", mse);
+}
 
+void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
+	double mse = 0;
+   
+    double oo = 0;
+    for (size_t o=0; o<O; o=round(oo)){
+        #pragma omp parallel for shared(mse) num_threads(48)
+        for (size_t n=0; n<N; n++){
+            double mm = 0;
+            for (size_t m=0; m<M; m=round(mm)){
+                double sum = 0;
+                sum = 1.0*(dtheta*n);
+                #pragma omp critical
+                mse += fabs(func[I(tp1, o, n, m)] - sum);
+                mm += (double)(M-1)/99.0;
+            }
+        }
+        oo += (double)(O-1)/99.0;
+    }
+	mse /= (1000*100*100);
+	printf("Mean Error F: %g\n", mse);
+}
+
+void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L, REAL* a_0){
+	double mse = 0;
+   
+    double newo = 0;
+    double inc = (O-1)/99.0;
+    #pragma omp parallel for shared(mse, inc) num_threads(48)
+    for (size_t o=0; o<100; o++){
+        double nn = 0;
+        for (size_t n=0; n<N; n=round(nn)){
+            for (size_t m=0; m<M; m++){
+                double sum = 0;
+                sum = a_0[m];
+                size_t oo = o*inc;
+                #pragma omp critical
+                mse += fabs(func[I(tp1, oo, n, m)] - sum);
+            }
+            nn += (double)(N-1)/99.0;
+        }
+    }
+	mse /= (1000*100*100);
+	printf("Mean Error a: %g\n", mse);
+}
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
 REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual);
@@ -62,12 +127,12 @@ int main(int argc, char *argv[]){
     size_t niter = atoi(argv[8]);
 
 
-    REAL dr = 2*PI/999.0;
-    REAL dtheta = PI/999.0;
-    REAL dphi = 2*PI/999.0;
+    REAL dr = 2*PI/(double)(M-1);
+    REAL dtheta = PI/(double)(N-1);
+    REAL dphi = 2*PI/(double)(O-1);
 
     // +2 for ghost points offset
-	size_t nelements = buffSize*(M+2)*(N+2)*(O+2);
+	size_t nelements = buffSize*(M+GHOST_SIZE)*(N+GHOST_SIZE)*(O+GHOST_SIZE);
 	cout << "Number of elements: " << nelements << endl;
 
 // its better to separate fdm grid with continuous axes
@@ -114,9 +179,12 @@ int main(int argc, char *argv[]){
 	    fillGhostPoints(a, F, G, 0, M, N, O);
     } 
     cout << " done." << endl;
-    writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-    writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-    writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+    printMSEa(a, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+    printMSEF(F, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    printMSEG(G, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    //writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    //writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    //writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
 
     cout << "Filling state 1..."; fflush(stdout);
@@ -128,10 +196,12 @@ int main(int argc, char *argv[]){
 	    fillGhostPoints(a, F, G, 1, M, N, O);
     } 
     cout << " done." << endl;
-
-    writeTimeSnapshot(filename0, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-    writeTimeSnapshot(filename1, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-    writeTimeSnapshot(filename2, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+    printMSEa(a, 1, 1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+    printMSEF(F, 1, 1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    printMSEG(G, 1, 1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    //writeTimeSnapshot(filename0, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    //writeTimeSnapshot(filename1, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    //writeTimeSnapshot(filename2, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
     getchar();
 
@@ -143,10 +213,12 @@ int main(int argc, char *argv[]){
 	    fillGhostPoints(a, F, G, 2, M, N, O);
     } 
 
-
-    writeTimeSnapshot(filename0, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-    writeTimeSnapshot(filename1, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-    writeTimeSnapshot(filename2, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+    printMSEa(a, 2, 2, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+    printMSEF(F, 2, 2, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    printMSEG(G, 2, 2, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    //writeTimeSnapshot(filename0, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    //writeTimeSnapshot(filename1, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+    //writeTimeSnapshot(filename2, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
     getchar();
 
@@ -174,9 +246,13 @@ int main(int argc, char *argv[]){
 	//char key = getchar();
 	if (l%10==0){
 	    cout << "Saving values..." << endl;
-	    writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-	    writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-	    writeTimeSnapshot(filename2, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+        printMSEa(a, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+        printMSEF(F, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+        printMSEG(G, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+
+	    //writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+	    //writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+	    //writeTimeSnapshot(filename2, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
 	    cout << "done." << endl;
 	    //getchar();
 	}

@@ -61,13 +61,13 @@ void fillGhostPoints(REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, si
 
 void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	#pragma omp parallel for schedule(dynamic) num_threads(64)
-	for(size_t m=0; m<M; m++){
-		cout << m << endl;
-		for(size_t n=0; n<N; n++){
-			for(size_t o=0; o<O; o++){
-				a[I(t, m, n, o)] = computeNexta(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-				F[I(t, m, n, o)] = computeNextF(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-				G[I(t, m, n, o)] = computeNextG(a, F, G, tm1, tm2, tm3, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+	for(size_t phi=0; phi<M; phi++){
+		cout << phi << endl;
+		for(size_t theta=0; theta<N; theta++){
+			for(size_t r=0; r<O; r++){
+				a[I(t, phi, theta, r)] = computeNexta(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				F[I(t, phi, theta, r)] = computeNextF(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				G[I(t, phi, theta, r)] = computeNextG(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
 			}
 		}
 	}
@@ -81,31 +81,12 @@ void computeFirstIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t
 		cout << r << endl;
 		for(size_t theta=0; theta<N; theta++){
 			for(size_t phi=0; phi<O; phi++){
-				a[I(t, r, theta, phi)] = computeFirsta(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-				F[I(t, r, theta, phi)] = computeFirstF(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-				G[I(t, r, theta, phi)] = computeFirstG(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				a[I(t, phi, theta, r)] = computeFirsta(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				F[I(t, phi, theta, r)] = computeFirstF(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
+				G[I(t, phi, theta, r)] = computeFirstG(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
 			}
 		}
 	}
-
-
-} 
-
-void computeSecondIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
-	
-	#pragma omp parallel for schedule(dynamic) num_threads(64)
-	for(size_t r=0; r<M; r++){
-		cout << r << endl;
-		for(size_t theta=0; theta<N; theta++){
-			for(size_t phi=0; phi<O; phi++){
-				a[I(l, r, theta, phi)] = computeSeconda(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-				F[I(l, r, theta, phi)] = computeSecondF(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-				G[I(l, r, theta, phi)] = computeSecondG(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
-			}
-		}
-	}
-
-
 } 
 
 std::fstream& gotoLine(std::fstream& file, unsigned int num){
@@ -118,12 +99,12 @@ std::fstream& gotoLine(std::fstream& file, unsigned int num){
 
 void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	#pragma omp parallel for schedule(dynamic) num_threads(64)
-	for(size_t r=0; r<M; r++){
+	for(size_t phi=0; phi<O; phi++){
 		for(size_t theta=0; theta<N; theta++){
-			for(size_t phi=0; phi<O; phi++){
-				a[I(l, r, theta, phi)] = a_0[r] + PI_1;
-				F[I(l, r, theta, phi)] = (REAL)q*(dtheta*(REAL)theta) + PI_2;
-				G[I(l, r, theta, phi)] = p*((dt*l)/L - dphi*phi) + PI_3;
+			for(size_t r=0; r<M; r++){
+				a[I(l, phi, theta, r)] = a_0[r] + PI_1;
+				F[I(l, phi, theta, r)] = (REAL)q*(dtheta*(REAL)theta) + PI_2;
+				G[I(l, phi, theta, r)] = p*((dt*l)/L - dphi*phi) + PI_3;
 			}
 		}
 	}
@@ -132,21 +113,21 @@ void fillInitialCondition(REAL* a, REAL* F, REAL *G, size_t l, size_t M, size_t 
 
 void fillDirichletBoundary(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	#pragma omp parallel for schedule(dynamic) num_threads(64)
-	for(size_t r=0; r<M; r++){
+	for(size_t phi=0; phi<O; phi++){
 		for(size_t theta=0; theta<N; theta++){
-			for(size_t phi=0; phi<O; phi++){
+			for(size_t r=0; r<M; r++){
 				if (r == 0 || r == M-1 ){
-					a[I(t, r, theta, phi)] = a_0[r] + PI_1;
-					F[I(t, r, theta, phi)] = q*(dtheta*theta) + PI_2;
-					G[I(t, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
+					a[I(t, phi, theta, r)] = a_0[r] + PI_1;
+					F[I(t, phi, theta, r)] = q*(dtheta*theta) + PI_2;
+					G[I(t, phi, theta, r)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
 				} else if (theta == 0 || theta == N-1 ){
-					a[I(t, r, theta, phi)] = a_0[r] + PI_1;
-					F[I(t, r, theta, phi)] = q*(dtheta*theta) + PI_2;
-					G[I(t, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
+					a[I(t, phi, theta, r)] = a_0[r] + PI_1;
+					F[I(t, phi, theta, r)] = q*(dtheta*theta) + PI_2;
+					G[I(t, phi, theta, r)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
 				} else if (phi == 0 || phi == O-1 ){
-					a[I(t, r, theta, phi)] = a_0[r] + PI_1;
-					F[I(t, r, theta, phi)] = q*(dtheta*theta) + PI_2;
-					G[I(t, r, theta, phi)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
+					a[I(t, phi, theta, r)] = a_0[r] + PI_1;
+					F[I(t, phi, theta, r)] = q*(dtheta*theta) + PI_2;
+					G[I(t, phi, theta, r)] = p*((dt*(REAL)l)/(REAL)L - dphi*(REAL)phi) + PI_3;
 				}
 			}
 		}
