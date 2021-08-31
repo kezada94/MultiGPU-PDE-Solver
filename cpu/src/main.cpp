@@ -145,7 +145,7 @@ int main(int argc, char *argv[]){
     cout << "Reading values for a(r)...";fflush(stdout);
     REAL *a_0 = new REAL[M];
     int i = 0;
-	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-1000.csv");
+	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-"+to_string(M)+".csv");
     if (file.is_open()){
         string line;
         while(getline(file, line)){
@@ -206,7 +206,8 @@ int main(int argc, char *argv[]){
     getchar();
 
     cout << "Filling state 2..."; fflush(stdout);
-    computeSecondIteration(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    fillInitialCondition(a, F, G, 2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    //computeSecondIteration(a, F, G, 2, 2, 1, 0, -1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     if (boundary == 0){
 	    fillDirichletBoundary(a, F, G, 2, 2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     } else if (boundary == 1){
@@ -246,9 +247,9 @@ int main(int argc, char *argv[]){
 	//char key = getchar();
 	if (l%10==0){
 	    cout << "Saving values..." << endl;
-        printMSEa(a, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
-        printMSEF(F, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-        printMSEG(G, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+		printMSEa(a, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+		printMSEF(F, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+		printMSEG(G, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
 
 	    //writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
 	    //writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
