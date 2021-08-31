@@ -16,22 +16,20 @@ import pyqtgraph.opengl as gl
 import sys
 # In[2]:
 
-M = sys.argv[1]
-n = sys.argv[2]
-q = sys.argv[3]
-t = int(sys.argv[4])
-_M = str(M)
-if (t==0):
-    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-A.dat", delimiter="\n")
-elif t==1:
-    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-F.dat", delimiter="\n")
-else:
-    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-G.dat", delimiter="\n")
+name = sys.argv[1]
+#if (t==0):
+#    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-A.dat", delimiter="\n")
+#elif t==1:
+#    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-F.dat", delimiter="\n")
+#else:
+#    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-G.dat", delimiter="\n")
 
+Z = np.genfromtxt(name, delimiter="\n")
 np.set_printoptions(edgeitems=30, linewidth=100000)
 Z = Z.reshape((-1, 30, 50, 50))
+#Z = np.nan_to_num(Z, copy=False)
 what = 1
-Z = Z[:, 1:-1, 1:-1, 1:-1]
+#Z = Z[:, 1:-1, 1:-1, 1:-1]
 
 L = Z.shape[0]
 print(Z.shape)
@@ -41,7 +39,8 @@ data = Z[l]#, 1:-1, 1:-1, 1:-1]
 print(data.shape)
 
 
-interr = (data - (data.min()))
+min = data.min()
+interr = (data - min)
 scale = (interr )#np.clip(interr, 0, interr.max())
 positive = (np.clip(scale, 0.0000, scale.max()))#np.clip(interr, 0, interr.max())
 negative = (np.clip(-scale, 0.0000, -scale.min()))
@@ -97,17 +96,17 @@ def update():
     ## update volume colors
     #data = Z[l, :, :, :]
     data = Z[l]#, 1:-1, 1:-1, 1:-1]
-    interr = (data - (data.min()))
+    interr = (data)# - (data.min()))
     print("Valor maximo:", data.max())
     print("T00 minimo:", data.min())
     scale = (interr )#np.clip(interr, 0, interr.max())
-    #positive = (np.clip(scale, 0.0000, scale.max()))#np.clip(interr, 0, interr.max())
-    #negative = (np.clip(-scale, 0.0000, -scale.min()))
+    positive = (np.clip(scale, 0.0000, scale.max()))#np.clip(interr, 0, interr.max())
+    negative = (np.clip(-scale, 0.0000, -scale.min()))
     d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
-    #d2[..., 0] = positive/positive.max() * (255.)
-    #d2[..., 1] = negative/negative.max() * (255.)
-    d2[..., 0] = scale/scale.max() * (255.)
-    d2[..., 1] = scale/scale.max() * (255.)
+    d2[..., 0] = positive/positive.max() * (255.)
+    d2[..., 1] = negative/negative.max() * (255.)
+    #d2[..., 0] = scale/scale.max() * (255.)
+    #d2[..., 1] = scale/scale.max() * (255.)
     d2[..., 2] = 255# - scale/scale.max() * (255.)
     d2[..., 3] = 30
 
