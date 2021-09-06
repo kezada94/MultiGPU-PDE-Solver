@@ -236,7 +236,7 @@ int main(int argc, char *argv[]){
 	if (boundary == 0){
 		fillDirichletBoundary(a, F, G, l, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
 	} else if (boundary == 1){
-	fillGhostPoints(a, F, G, t, M, N, O);
+	    fillGhostPoints(a, F, G, t, M, N, O);
 	} 
 
 
@@ -244,7 +244,7 @@ int main(int argc, char *argv[]){
 
 	//cout << "Save? [y/n]" << endl;
 	//char key = getchar();
-	if (l%10==0){
+	if (l%10 == 0){
 	    cout << "Saving values..." << endl;
         printMSEa(a, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
         printMSEF(F, l, tp1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
