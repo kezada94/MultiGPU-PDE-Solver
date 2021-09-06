@@ -2,10 +2,10 @@ TARGET=pde
 SRC_DIR=src
 OBJ_DIR=obj
 VERBOSE=no
-GCC_FLAGS=-O3 -std=c++17 -fopenmp -pthread
-LIBS=-fopenmp -pthread
+GCC_FLAGS=-O3 -std=c++17 -fopenmp -pthread -lgmp -lmpfr
+LIBS=-fopenmp -pthread -lgmp -lmpfr
 DEFINES=
-INCLUDES=-I../vendor/eigen-3.3.9
+INCLUDES=-I../vendor/eigen-3.3.9 
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)
 
 OBJ_FILES=$(addprefix $(OBJ_DIR)/,$(notdir $(CPP_FILES:.cpp=.o)))

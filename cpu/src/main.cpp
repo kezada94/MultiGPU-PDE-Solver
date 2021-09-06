@@ -21,7 +21,7 @@ const REAL PI = 3.14159265358979323846f;
 const size_t buffSize = 4;
 const size_t nfunctions= 3;
 void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
-	double mse = 0;
+	REAL  mse = 0;
    
     #pragma omp parallel for shared(mse) num_threads(48)
     for (size_t o=0; o<O; o++){
@@ -29,21 +29,21 @@ void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         for (size_t n=0; n<N; n=round(nn)){
             double mm = 0;
             for (size_t m=0; m<M; m=round(mm)){
-                double sum = 0;
+                REAL sum = 0;
                 sum = p*(l*dt/L - o*dphi);
                 #pragma omp critical
-                mse += fabs(func[I(tp1, o, n, m)] - sum);
+                mse += (func[I(tp1, o, n, m)] - sum);
                 mm += (double)(M-1)/99.0;
             }
             nn += (double)(N-1)/99.0;
         }
     }
-	mse /= (1000*100*100);
+	mse /= (O*100*100);
 	printf("Mean Error G: %g\n", mse);
 }
 
 void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
-	double mse = 0;
+	REAL mse = 0;
    
     double oo = 0;
     for (size_t o=0; o<O; o=round(oo)){
@@ -51,21 +51,21 @@ void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         for (size_t n=0; n<N; n++){
             double mm = 0;
             for (size_t m=0; m<M; m=round(mm)){
-                double sum = 0;
-                sum = 1.0*(dtheta*n);
+                REAL sum = 0;
+                sum = 3.0*(dtheta*n);
                 #pragma omp critical
-                mse += fabs(func[I(tp1, o, n, m)] - sum);
+                mse += (func[I(tp1, o, n, m)] - sum);
                 mm += (double)(M-1)/99.0;
             }
         }
         oo += (double)(O-1)/99.0;
     }
-	mse /= (1000*100*100);
+	mse /= (N*100*100);
 	printf("Mean Error F: %g\n", mse);
 }
 
 void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L, REAL* a_0){
-	double mse = 0;
+	REAL mse = 0;
    
     double newo = 0;
     double inc = (O-1)/99.0;
@@ -74,16 +74,16 @@ void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         double nn = 0;
         for (size_t n=0; n<N; n=round(nn)){
             for (size_t m=0; m<M; m++){
-                double sum = 0;
+                REAL sum = 0;
                 sum = a_0[m];
                 size_t oo = o*inc;
                 #pragma omp critical
-                mse += fabs(func[I(tp1, oo, n, m)] - sum);
+                mse += (func[I(tp1, oo, n, m)] - sum);
             }
             nn += (double)(N-1)/99.0;
         }
     }
-	mse /= (1000*100*100);
+	mse /= (M*100*100);
 	printf("Mean Error a: %g\n", mse);
 }
 
@@ -245,7 +245,7 @@ int main(int argc, char *argv[]){
 
 	//cout << "Save? [y/n]" << endl;
 	//char key = getchar();
-	if (l%10==0){
+	if (l%10==0 || true){
 	    cout << "Saving values..." << endl;
 		printMSEa(a, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
 		printMSEF(F, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
@@ -262,7 +262,7 @@ int main(int argc, char *argv[]){
     //Boundary filll
     return 0;
 }
-
+/*
 static MatrixXcd i2x2 = [] {
     MatrixXcd matrix(2,2);
     matrix << 1., 0, 0, 1.;
@@ -374,7 +374,7 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
     file.close();
 
 }
-/*
+
 void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l){
     for (size_t m=0; m<M; ++m){
 	    for (size_t n=0; n<N; ++n){
