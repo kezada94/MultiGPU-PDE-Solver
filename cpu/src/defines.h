@@ -1,8 +1,8 @@
 #pragma once
 #include <iostream>
-#include <boost/multiprecision/cpp_dec_float.hpp>
+#include <boost/multiprecision/float128.hpp>
 
-
+using namespace boost::multiprecision;
 
 #define GHOST_SIZE 2
 #define I(t, phi, theta, r) (t)*(O+GHOST_SIZE)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (phi+1)*(N+GHOST_SIZE)*(M+GHOST_SIZE) + (theta+1)*(M+GHOST_SIZE) + r+1
@@ -22,5 +22,6 @@
 #define PI_5 E3*sin(dr*r)*sin(dtheta*theta)*sin(dphi*phi)
 #define PI_6 E3*sin(dr*r)*sin(dtheta*theta)*sin(dphi*phi)
 
-//typedef boost::multiprecision::cpp_dec_float_100 REAL;
-typedef double REAL;
+typedef float128 REAL;
+//typedef cpp_dec_float_100 REAL;
+//typedef double REAL;

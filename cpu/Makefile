@@ -3,7 +3,7 @@ SRC_DIR=src
 OBJ_DIR=obj
 VERBOSE=no
 GCC_FLAGS=-O3 -std=c++17 -fopenmp -pthread -lgmp -lmpfr
-LIBS=-fopenmp -pthread -lgmp -lmpfr
+LIBS=-fopenmp -pthread -lgmp -lmpfr -lquadmath
 DEFINES=
 INCLUDES=-I../vendor/eigen-3.3.9 
 CPP_FILES=$(wildcard $(SRC_DIR)/*cpp)
