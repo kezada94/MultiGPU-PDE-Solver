@@ -1,3 +1,4 @@
+from Graph import M
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
@@ -14,21 +15,19 @@ import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
 import sys
-# In[2]:
+
+if len(sys.argv) != 5:
+    print("Ejecutar como 'python Graph2.py <filename> <M> <N> <O>")
+    exit()
 
 name = sys.argv[1]
-#if (t==0):
-#    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-A.dat", delimiter="\n")
-#elif t==1:
-#    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-F.dat", delimiter="\n")
-#else:
-#    Z = np.genfromtxt("result-"+str(n)+"-"+str(q)+"-"+_M+"-G.dat", delimiter="\n")
+M = sys.argv[2]
+N = sys.argv[3]
+O = sys.argv[4]
 
 Z = np.genfromtxt(name, delimiter="\n")
-np.set_printoptions(edgeitems=30, linewidth=100000)
-Z = Z.reshape((-1, 30, 50, 50))
+Z = Z.reshape((-1, O, N, M))
 #Z = np.nan_to_num(Z, copy=False)
-what = 1
 #Z = Z[:, 1:-1, 1:-1, 1:-1]
 
 L = Z.shape[0]
