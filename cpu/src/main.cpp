@@ -199,6 +199,7 @@ int main(int argc, char *argv[]){
     printMSEa(a, 1, 1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
     printMSEF(F, 1, 1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
     printMSEG(G, 1, 1, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    writeTimeSnapshot(filename, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 3);
     //writeTimeSnapshot(filename0, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
     //writeTimeSnapshot(filename1, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
     //writeTimeSnapshot(filename2, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
@@ -217,6 +218,7 @@ int main(int argc, char *argv[]){
     printMSEa(a, 2, 2, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
     printMSEF(F, 2, 2, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
     printMSEG(G, 2, 2, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    writeTimeSnapshot(filename, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 3);
     //writeTimeSnapshot(filename0, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
     //writeTimeSnapshot(filename1, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
     //writeTimeSnapshot(filename2, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
@@ -225,44 +227,45 @@ int main(int argc, char *argv[]){
 
 
     for (size_t l=3; l<niter; ++l){
-	cout << "Starting iteration l=" << l << endl;
-	size_t t = l%buffSize;
-	size_t tm1 = (l-1)%buffSize;
-	size_t tm2 = (l-2)%buffSize;
-	size_t tm3 = (l-3)%buffSize;
+        cout << "Starting iteration l=" << l << endl;
+        size_t t = l%buffSize;
+        size_t tm1 = (l-1)%buffSize;
+        size_t tm2 = (l-2)%buffSize;
+        size_t tm3 = (l-3)%buffSize;
 
-	cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
+        cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
 
-	computeNextIteration(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-	if (boundary == 0){
-		fillDirichletBoundary(a, F, G, l, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-	} else if (boundary == 1){
-	    fillGhostPoints(a, F, G, t, M, N, O);
-	} 
+        computeNextIteration(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+        if (boundary == 0){
+            fillDirichletBoundary(a, F, G, l, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+        } else if (boundary == 1){
+            fillGhostPoints(a, F, G, t, M, N, O);
+        } 
 
 
-	cout << "Finished iteration l=" << l << endl;
+        cout << "Finished iteration l=" << l << endl;
 
-	//cout << "Save? [y/n]" << endl;
-	//char key = getchar();
-	if (l%10==0 || true){
-	    cout << "Saving values..." << endl;
-		printMSEa(a, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
-		printMSEF(F, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-		printMSEG(G, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+        //cout << "Save? [y/n]" << endl;
+        //char key = getchar();
+        if (l%10==0 || true){
+            cout << "Saving values..." << endl;
+            printMSEa(a, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+            printMSEF(F, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+            printMSEG(G, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
 
-	    //writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
-	    //writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
-	    //writeTimeSnapshot(filename2, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
-	    cout << "done." << endl;
-	    //getchar();
-	}
-}
+            writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 3);
+            //writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+            //writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
+            //writeTimeSnapshot(filename2, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
+            cout << "done." << endl;
+            //getchar();
+        }
+    }
 	
     //Boundary filll
     return 0;
 }
-/*
+
 static MatrixXcd i2x2 = [] {
     MatrixXcd matrix(2,2);
     matrix << 1., 0, 0, 1.;
@@ -284,9 +287,9 @@ static MatrixXcd t3 = [] {
     return matrix;
 }();
 MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
-    REAL anow = a[I(t, r, theta, phi)];
-    REAL Fnow = F[I(t, r, theta, phi)];
-    REAL Gnow = G[I(t, r, theta, phi)];
+    REAL anow = a[I(t, phi, theta, r)];
+    REAL Fnow = F[I(t, phi, theta, r)];
+    REAL Gnow = G[I(t, phi, theta, r)];
     REAL n1 = sin(Fnow)*cos(Gnow);
     REAL n2 = sin(Fnow)*sin(Gnow);
     REAL n3 = cos(Fnow);
@@ -294,9 +297,9 @@ MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size
     return U;
 }
 MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
-    REAL anow = a[I(t, r, theta, phi)];
-    REAL Fnow = F[I(t, r, theta, phi)];
-    REAL Gnow = G[I(t, r, theta, phi)];
+    REAL anow = a[I(t, phi, theta, r)];
+    REAL Fnow = F[I(t, phi, theta, r)];
+    REAL Gnow = G[I(t, phi, theta, r)];
     REAL n1 = sin(Fnow)*cos(Gnow);
     REAL n2 = sin(Fnow)*sin(Gnow);
     REAL n3 = cos(Fnow);
@@ -317,9 +320,8 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
     //REAL K = 4970.25;
     REAL K = 2.0;
     complex<double> cons = -K/2.0f;
-    REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(L_0*L_0 + 0*L_1*L_1 +0*L_2*L_2 +0*L_3*L_3)//).trace()).real();
-                        + 0*lambda/4.0*(-1.0*getF(L_0, L_0)*getF(L_0, L_0)
-                                    +getF(L_0, L_1)*getF(L_0, L_1)
+    REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(L_0*L_0 + L_1*L_1 +L_2*L_2 +L_3*L_3)//).trace()).real();
+                        +lambda/4.0*(getF(L_0, L_1)*getF(L_0, L_1)
                                     +getF(L_0, L_2)*getF(L_0, L_2)
                                     +getF(L_0, L_3)*getF(L_0, L_3)
                             	    -(-1.0/4.0*(getF(L_0, L_1)*getF(L_0, L_1)
@@ -334,13 +336,6 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
                                         	+getF(L_3, L_1)*getF(L_3, L_1)
                                         	+getF(L_2, L_3)*getF(L_2, L_3)
                                         	+getF(L_3, L_2)*getF(L_3, L_2))) )).trace()).real();
-	if (cual == 0){
-    	return a[I(t, r, theta, phi)];//t00;
-	} else if (cual == 1){
-		return F[I(t, r, theta, phi)];//t00;
-	} else if (cual == 2){
-    	return G[I(t, r, theta, phi)];//t00;
-	}
     return t00;
 
 
@@ -350,31 +345,37 @@ void writeTimeSnapshot(string filename, REAL* a, REAL* F, REAL *G, size_t t, siz
     ofstream file;
     //file.open(filename);
     file.open(filename, std::ofstream::app);
-    double mm = 0;
-    for (size_t m=0; m<M; m=round(mm)){
-    	cout << m << endl;
+    double oo = 0;
+    for (size_t phi=1; phi<O; phi=round(oo)){
         double nn = 0;
-            for (size_t n=0; n<N; n=round(nn)){
-            double oo = 0;
-            for (size_t o=0; o<O; o=round(oo)){
+            for (size_t theta=1; theta<N; theta=round(nn)){
+            double mm = 0;
+            for (size_t r=1; r<O; r=round(mm)){
                 if (file.is_open()){
-					cout << m << ", " << n << ", " << o << endl;
-                    file <<std::fixed << std::setprecision(62) << getT00(a, F, G, t, tm1, m, n, o, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, cual) << "\n";
+                    REAL val;
+                    if (cual == 0){
+                            val = a[I(t, phi, theta, r)];//t00;
+                    } else if (cual == 1){
+                            val = F[I(t, phi, theta, r)];//t00;
+                    } else if (cual == 2){
+                            val = G[I(t, phi, theta, r)];//t00;
+                    } else if (cual == 3){
+                            val = getT00(a, F, G, t, tm1, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, cual);
+                    }
+                    file <<std::fixed << std::setprecision(10) << val << "\n";
                     file.flush();
-                }
-                else{
+                } else {
                     std::cerr << "didn't write" << std::endl;
                 }
-                oo += (double)(O-1)/9.0;
+                mm += (double)(M-1)/49.0;
             }
-            nn += (double)(N-1)/99.0;
+            nn += (double)(N-1)/49.0;
         }
-        mm += (double)(M-1)/99.0;
+        oo += (double)(O-1)/29.0;
     }
     file.close();
-
 }
-
+/*
 void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l){
     for (size_t m=0; m<M; ++m){
 	    for (size_t n=0; n<N; ++n){
