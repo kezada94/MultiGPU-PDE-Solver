@@ -173,20 +173,20 @@ int main(int argc, char *argv[]){
 
     cout << "Filling state 0..."; fflush(stdout);
     fillInitialCondition(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-    if (boundary == 0){
+    //if (boundary == 0){
 	    fillDirichletBoundary(a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-    } else if (boundary == 1){
+    //} else if (boundary == 1){
 	    fillGhostPoints(a, F, G, 0, M, N, O);
-    } 
+    //} 
     cout << " done." << endl;
     printMSEa(a, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
-    printMSEF(F, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-    printMSEG(G, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-    //writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    //printMSEF(F, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    //printMSEG(G, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+    writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
     //writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
     //writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
-
+/*
     cout << "Filling state 1..."; fflush(stdout);
     fillInitialCondition(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     //computeFirstIteration(a, F, G, 1, 1, 0, -1, -2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
@@ -225,8 +225,8 @@ int main(int argc, char *argv[]){
     cout << "Written" << endl;
     getchar();
 
-
-    for (size_t l=3; l<niter; ++l){
+*/
+    for (size_t l=1; l<niter; ++l){
         cout << "Starting iteration l=" << l << endl;
         size_t t = l%buffSize;
         size_t tm1 = (l-1)%buffSize;
@@ -236,25 +236,25 @@ int main(int argc, char *argv[]){
         cout << t << " " << tm1 << " " << tm2 << " " << tm3 << " "  << endl;
 
         computeNextIteration(a, F, G, l, t, tm1, tm2, tm3, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-        if (boundary == 0){
+        //if (boundary == 0){
             fillDirichletBoundary(a, F, G, l, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
-        } else if (boundary == 1){
+        //} else if (boundary == 1){
             fillGhostPoints(a, F, G, t, M, N, O);
-        } 
+        //} 
 
 
         cout << "Finished iteration l=" << l << endl;
 
         //cout << "Save? [y/n]" << endl;
         //char key = getchar();
-        if (l%10==0){
+        if (l%10==0 || true){
             cout << "Saving values..." << endl;
             printMSEa(a, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
-            printMSEF(F, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-            printMSEG(G, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+            //printMSEF(F, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
+            //printMSEG(G, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
 
-            writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 3);
-            //writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+            //writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 3);
+            writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
             //writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
             //writeTimeSnapshot(filename2, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
             cout << "done." << endl;
