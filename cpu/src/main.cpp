@@ -39,7 +39,7 @@ void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         }
     }
 	mse /= (O*100*100);
-	printf("Mean Error G: %g\n", mse);
+    cout << "Mean Error G: " << std::setprecision(64) << mse << endl;
 }
 
 void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
@@ -61,7 +61,7 @@ void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         oo += (double)(O-1)/99.0;
     }
 	mse /= (N*100*100);
-	printf("Mean Error F: %g\n", mse);
+    cout << "Mean Error F: " << std::setprecision(64) << mse << endl;
 }
 
 void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L, REAL* a_0){
@@ -84,7 +84,7 @@ void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
         }
     }
 	mse /= (M*100*100);
-	printf("Mean Error a: %g\n", mse);
+    cout << "Mean Error a: " << std::setprecision(64) << mse << endl;
 }
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
@@ -247,7 +247,7 @@ int main(int argc, char *argv[]){
 
         //cout << "Save? [y/n]" << endl;
         //char key = getchar();
-        if (l%10==0 || true){
+        if (l%10==0){
             cout << "Saving values..." << endl;
             printMSEa(a, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
             printMSEF(F, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
@@ -293,7 +293,7 @@ MatrixXcd getU(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size
     REAL n1 = sin(Fnow)*cos(Gnow);
     REAL n2 = sin(Fnow)*sin(Gnow);
     REAL n3 = cos(Fnow);
-    MatrixXcd U = cos(anow)*i2x2 + sin(anow)*(t1*n1+t2*n2+t3*n3);
+    MatrixXcd U = (double)cos(anow)*i2x2 + (double)sin(anow)*(t1*(double)n1+t2*(double)n2+t3*(double)n3);
     return U;
 }
 MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O){
@@ -303,7 +303,7 @@ MatrixXcd getUm1(REAL* a, REAL* F, REAL *G, size_t t, size_t r, size_t theta, si
     REAL n1 = sin(Fnow)*cos(Gnow);
     REAL n2 = sin(Fnow)*sin(Gnow);
     REAL n3 = cos(Fnow);
-    MatrixXcd Um1 = cos(anow)*i2x2 - sin(anow)*(t1*n1+t2*n2+t3*n3);
+    MatrixXcd Um1 = (double)cos(anow)*i2x2 - (double)sin(anow)*(t1*(double)n1+t2*(double)n2+t3*(double)n3);
     return Um1;
 }
 
@@ -313,15 +313,15 @@ MatrixXcd getF(MatrixXcd L1, MatrixXcd L2){
 
 REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t theta, size_t phi, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lambda, int cual){
     MatrixXcd Um1 = getUm1(a, F, G, t, r, theta, phi, M, N, O);
-    MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, tm1, r, theta, phi, M, N, O))/dt); 
-    MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/(dr)); 
-    MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/(dtheta));
-    MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/(dphi)); 
+    MatrixXcd L_0 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, tm1, r, theta, phi, M, N, O))/(double)dt); 
+    MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/(double)(dr)); 
+    MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/(double)(dtheta));
+    MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/(double)(dphi)); 
     //REAL K = 4970.25;
-    REAL K = 2.0;
+    double K = 2.0;
     complex<double> cons = -K/2.0f;
     REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(L_0*L_0 + L_1*L_1 +L_2*L_2 +L_3*L_3)//).trace()).real();
-                        +lambda/4.0*(getF(L_0, L_1)*getF(L_0, L_1)
+                        +((double)lambda)/4.0*(getF(L_0, L_1)*getF(L_0, L_1)
                                     +getF(L_0, L_2)*getF(L_0, L_2)
                                     +getF(L_0, L_3)*getF(L_0, L_3)
                             	    -(-1.0/4.0*(getF(L_0, L_1)*getF(L_0, L_1)
