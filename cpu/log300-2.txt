@@ -1,0 +1,663 @@
+[1m[7m%[27m[1m[0m                                                                                                                                                                                    k~/pde2/cpu\[0m[27m[24m[J[01;32m➜  [36mcpu[00m [01;34mgit:([31mfaster[34m) [33m✗[00m [K[?1h=[?2004h../.  ssrun --container-name=cuda-11.3.1 --container-image='nvidia/cuda:11.3.1-devel-ubuntu20.04' -p cpu --cpus-per-task=64  --pty ./pde 0.000001 100 100 100 1 3 3 10000 0[K[A[155C5[3C5[3C5[1B[164D[A[155C1[3C1[3C1[1B[164D[A[155C5[3C5[3C5[1B[164D[A[155C1[3C1[3C1[1B[164D[A[179C[1C[1C0[P[17C00[2C 0 [A[155C300 100 100 1 3 3 10[2C0 0[A[156C[1C[1C[1C[P[15C00[2C 0 [A[158C[1C0[P[14C000 0 [A[159C300 100 1 3 3 1[1B[177D0 0[A[160C 00 100 1 3 3 10[2C0 0[A[160C 3 00 100 1 3 3 1[3C0 0[A[158C[1C[1C0[P[12C10[3C 0 [A[159C[1C[1C[1C[1C0[P[9C00[2C 0 [A[163C300 1 3 3 10[2C0 0[A[164C[?1l>[?2004l[1B
+ksrun\1e-06
+Number of elements: 110174432
+Generating grids...done
+Reading values for a(r)...done. 300 elements red
+Filling state 0... done.
+Mean Error a: 0
+
+
+Mean Error F: 0
+
+
+
+Mean Error G: 0
+Written
+Filling state 1... done.
+Mean Error a: 0
+Mean Error F: 0
+Mean Error G: 0
+Written
+Filling state 2...Mean Error a: 0
+Mean Error F: 0
+Mean Error G: 0
+Written
+Starting iteration l=3
+3 2 1 0 
+Finished iteration l=3
+Starting iteration l=4
+0 3 2 1 
+Finished iteration l=4
+Starting iteration l=5
+1 0 3 2 
+Finished iteration l=5
+Starting iteration l=6
+2 1 0 3 
+Finished iteration l=6
+Starting iteration l=7
+3 2 1 0 
+Finished iteration l=7
+Starting iteration l=8
+0 3 2 1 
+Finished iteration l=8
+Starting iteration l=9
+1 0 3 2 
+Finished iteration l=9
+Starting iteration l=10
+2 1 0 3 
+Finished iteration l=10
+Saving values...
+Mean Error a: 1.767488252291988457817476542946916076569354625199957706526230479e-12
+Mean Error F: 2.047500879245412962754450236417570354360354253210343938501982769e-24
+Mean Error G: 1.284306485402507145650326072953613471550734608803487516254852632e-18
+done.
+Starting iteration l=11
+3 2 1 0 
+Finished iteration l=11
+Starting iteration l=12
+0 3 2 1 
+Finished iteration l=12
+Starting iteration l=13
+1 0 3 2 
+Finished iteration l=13
+Starting iteration l=14
+2 1 0 3 
+Finished iteration l=14
+Starting iteration l=15
+3 2 1 0 
+Finished iteration l=15
+Starting iteration l=16
+0 3 2 1 
+Finished iteration l=16
+Starting iteration l=17
+1 0 3 2 
+Finished iteration l=17
+Starting iteration l=18
+2 1 0 3 
+Finished iteration l=18
+Starting iteration l=19
+3 2 1 0 
+^[[A^[[A^[[A^[[A^[[A^[[A^[[A^[[A^[[A^[[A^[[A^[[A^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[BFinished iteration l=19
+Starting iteration l=20
+0 3 2 1 
+
+
+
+Finished iteration l=20
+Saving values...
+Mean Error a: 8.395569195920938435430173980835011171873563608873900637047334978e-12
+Mean Error F: 4.723933389796664237781854499524455814317488480818093391876799656e-23
+Mean Error G: 1.481538770184732379969844362416783221431357312912302756362470503e-17
+done.
+Starting iteration l=21
+1 0 3 2 
+Finished iteration l=21
+Starting iteration l=22
+2 1 0 3 
+Finished iteration l=22
+Starting iteration l=23
+3 2 1 0 
+Finished iteration l=23
+Starting iteration l=24
+0 3 2 1 
+Finished iteration l=24
+Starting iteration l=25
+1 0 3 2 
+Finished iteration l=25
+Starting iteration l=26
+2 1 0 3 
+Finished iteration l=26
+Starting iteration l=27
+3 2 1 0 
+Finished iteration l=27
+Starting iteration l=28
+0 3 2 1 
+Finished iteration l=28
+Starting iteration l=29
+1 0 3 2 
+Finished iteration l=29
+Starting iteration l=30
+2 1 0 3 
+Finished iteration l=30
+Saving values...
+Mean Error a: 1.993333971816361577289558540417827419516646231229529600027434571e-11
+Mean Error F: 2.672019718436462619878785991155664197867924560700583570766277565e-22
+Mean Error G: 5.586729432000661240574107709736163754206353451079988511770625342e-17
+done.
+Starting iteration l=31
+3 2 1 0 
+Finished iteration l=31
+Starting iteration l=32
+0 3 2 1 
+Finished iteration l=32
+Starting iteration l=33
+1 0 3 2 
+Finished iteration l=33
+Starting iteration l=34
+2 1 0 3 
+Finished iteration l=34
+Starting iteration l=35
+3 2 1 0 
+Finished iteration l=35
+Starting iteration l=36
+0 3 2 1 
+Finished iteration l=36
+Starting iteration l=37
+1 0 3 2 
+Finished iteration l=37
+Starting iteration l=38
+2 1 0 3 
+Finished iteration l=38
+Starting iteration l=39
+3 2 1 0 
+Finished iteration l=39
+Starting iteration l=40
+0 3 2 1 
+Finished iteration l=40
+Saving values...
+Mean Error a: 3.638079980402898827151156608144330063761669247484688647877224871e-11
+Mean Error F: 8.910625623899820569300434633218614187050637091155103110863081445e-22
+Mean Error G: 1.397293447538844676373850758238348736021664595625062967312302983e-16
+done.
+Starting iteration l=41
+1 0 3 2 
+Finished iteration l=41
+Starting iteration l=42
+2 1 0 3 
+Finished iteration l=42
+Starting iteration l=43
+3 2 1 0 
+Finished iteration l=43
+Starting iteration l=44
+0 3 2 1 
+Finished iteration l=44
+Starting iteration l=45
+1 0 3 2 
+Finished iteration l=45
+Starting iteration l=46
+2 1 0 3 
+Finished iteration l=46
+Starting iteration l=47
+3 2 1 0 
+Finished iteration l=47
+Starting iteration l=48
+0 3 2 1 
+Finished iteration l=48
+Starting iteration l=49
+1 0 3 2 
+Finished iteration l=49
+Starting iteration l=50
+2 1 0 3 
+Finished iteration l=50
+Saving values...
+Mean Error a: 5.773794943215902925348750021808348685313340211989794112447653074e-11
+Mean Error F: 2.245448522816463266200081005945363498959692289507901045652394149e-21
+Mean Error G: 2.816908349266574793553156488077544880941880423289787250759666323e-16
+done.
+Starting iteration l=51
+3 2 1 0 
+Finished iteration l=51
+Starting iteration l=52
+0 3 2 1 
+Finished iteration l=52
+Starting iteration l=53
+1 0 3 2 
+Finished iteration l=53
+Starting iteration l=54
+2 1 0 3 
+Finished iteration l=54
+Starting iteration l=55
+3 2 1 0 
+Finished iteration l=55
+Starting iteration l=56
+0 3 2 1 
+Finished iteration l=56
+Starting iteration l=57
+1 0 3 2 
+Finished iteration l=57
+Starting iteration l=58
+2 1 0 3 
+Finished iteration l=58
+Starting iteration l=59
+3 2 1 0 
+Finished iteration l=59
+Starting iteration l=60
+0 3 2 1 
+Finished iteration l=60
+Saving values...
+Mean Error a: 8.40047885748287096213929123218236490351900374731171535729217034e-11
+Mean Error F: 4.754486957204790623463486065539542805372236400204440756004669187e-21
+Mean Error G: 4.970410374044714075487979644326352857286660903061587745369712793e-16
+done.
+Starting iteration l=61
+1 0 3 2 
+Finished iteration l=61
+Starting iteration l=62
+2 1 0 3 
+Finished iteration l=62
+Starting iteration l=63
+3 2 1 0 
+Finished iteration l=63
+Starting iteration l=64
+0 3 2 1 
+Finished iteration l=64
+Starting iteration l=65
+1 0 3 2 
+Finished iteration l=65
+Starting iteration l=66
+2 1 0 3 
+Finished iteration l=66
+Starting iteration l=67
+3 2 1 0 
+Finished iteration l=67
+Starting iteration l=68
+0 3 2 1 
+Finished iteration l=68
+Starting iteration l=69
+1 0 3 2 
+Finished iteration l=69
+Starting iteration l=70
+2 1 0 3 
+Finished iteration l=70
+Saving values...
+Mean Error a: 1.151813171979459875471978634623821033652489456795250801539473901e-10
+Mean Error F: 8.93980388248963083506137561872818364889335176062506297510897209e-21
+Mean Error G: 8.010692005302454205898549592148839293282584410867421968232106459e-16
+done.
+Starting iteration l=71
+3 2 1 0 
+Finished iteration l=71
+Starting iteration l=72
+0 3 2 1 
+Finished iteration l=72
+Starting iteration l=73
+1 0 3 2 
+Finished iteration l=73
+Starting iteration l=74
+2 1 0 3 
+Finished iteration l=74
+Starting iteration l=75
+3 2 1 0 
+Finished iteration l=75
+Starting iteration l=76
+0 3 2 1 
+Finished iteration l=76
+Starting iteration l=77
+1 0 3 2 
+Finished iteration l=77
+Starting iteration l=78
+2 1 0 3 
+Finished iteration l=78
+Starting iteration l=79
+3 2 1 0 
+Finished iteration l=79
+Starting iteration l=80
+0 3 2 1 
+Finished iteration l=80
+Saving values...
+Mean Error a: 1.512675352610517957841344173975483379076332361262705257311851977e-10
+Mean Error F: 1.54205232948630462995791385906985742510116100051483896369824087e-20
+Mean Error G: 1.209064547557463490173409679617788580403437635391523781487737501e-15
+done.
+Starting iteration l=81
+1 0 3 2 
+Finished iteration l=81
+Starting iteration l=82
+2 1 0 3 
+Finished iteration l=82
+Starting iteration l=83
+3 2 1 0 
+Finished iteration l=83
+Starting iteration l=84
+0 3 2 1 
+Finished iteration l=84
+Starting iteration l=85
+1 0 3 2 
+Finished iteration l=85
+Starting iteration l=86
+2 1 0 3 
+Finished iteration l=86
+Starting iteration l=87
+3 2 1 0 
+Finished iteration l=87
+Starting iteration l=88
+0 3 2 1 
+Finished iteration l=88
+Starting iteration l=89
+1 0 3 2 
+Finished iteration l=89
+Starting iteration l=90
+2 1 0 3 
+Finished iteration l=90
+Saving values...
+Mean Error a: 1.922634427173200266119055797537016990979459765745770929999630016e-10
+Mean Error F: 2.491326604846661205078043504244424885841674858930138872461623028e-20
+Mean Error G: 1.73631627578396928420721182152455979395542565620692461613991784e-15
+done.
+Starting iteration l=91
+3 2 1 0 
+Finished iteration l=91
+Starting iteration l=92
+0 3 2 1 
+Finished iteration l=92
+Starting iteration l=93
+1 0 3 2 
+Finished iteration l=93
+Starting iteration l=94
+2 1 0 3 
+Finished iteration l=94
+Starting iteration l=95
+3 2 1 0 
+Finished iteration l=95
+Starting iteration l=96
+0 3 2 1 
+Finished iteration l=96
+Starting iteration l=97
+1 0 3 2 
+Finished iteration l=97
+Starting iteration l=98
+2 1 0 3 
+Finished iteration l=98
+Starting iteration l=99
+3 2 1 0 
+Finished iteration l=99
+Starting iteration l=100
+0 3 2 1 
+Finished iteration l=100
+Saving values...
+Mean Error a: 2.38169039513557514412247350832653782985112634211899677395369247e-10
+Mean Error F: 3.823214856379006292174731293447869473070759943363289097029273754e-20
+Mean Error G: 2.398113555685774918438368387595849931428584016535664724129344323e-15
+done.
+Starting iteration l=101
+1 0 3 2 
+Finished iteration l=101
+Starting iteration l=102
+2 1 0 3 
+Finished iteration l=102
+Starting iteration l=103
+3 2 1 0 
+Finished iteration l=103
+Starting iteration l=104
+0 3 2 1 
+Finished iteration l=104
+Starting iteration l=105
+1 0 3 2 
+Finished iteration l=105
+Starting iteration l=106
+2 1 0 3 
+Finished iteration l=106
+Starting iteration l=107
+3 2 1 0 
+Finished iteration l=107
+Starting iteration l=108
+0 3 2 1 
+Finished iteration l=108
+Starting iteration l=109
+1 0 3 2 
+Finished iteration l=109
+Starting iteration l=110
+2 1 0 3 
+Finished iteration l=110
+Saving values...
+Mean Error a: 2.889843255902040158670406725388694901992898627679616273853319421e-10
+Mean Error F: 5.628878135965772784707014158089782837213445690067057936662307821e-20
+Mean Error G: 3.209745530050848528084097865249259595936558565599712525274065892e-15
+done.
+Starting iteration l=111
+3 2 1 0 
+Finished iteration l=111
+Starting iteration l=112
+0 3 2 1 
+^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[Finished iteration l=112
+Starting iteration l=113
+1 0 3 2 
+Finished iteration l=113
+Starting iteration l=114
+2 1 0 3 
+Finished iteration l=114
+Starting iteration l=115
+3 2 1 0 
+Finished iteration l=115
+Starting iteration l=116
+0 3 2 1 
+Finished iteration l=116
+Starting iteration l=117
+1 0 3 2 
+Finished iteration l=117
+Starting iteration l=118
+2 1 0 3 
+Finished iteration l=118
+Starting iteration l=119
+3 2 1 0 
+Finished iteration l=119
+Starting iteration l=120
+0 3 2 1 
+Finished iteration l=120
+Saving values...
+Mean Error a: 3.447093008813321877862766824139450190555346348995951968325281892e-10
+Mean Error F: 8.009226740625976860533582029393363537081086609137029564167771119e-20
+Mean Error G: 4.186501313112906336859897461121089696274597436488930932975071309e-15
+done.
+Starting iteration l=121
+1 0 3 2 
+Finished iteration l=121
+Starting iteration l=122
+2 1 0 3 
+Finished iteration l=122
+Starting iteration l=123
+3 2 1 0 
+Finished iteration l=123
+Starting iteration l=124
+0 3 2 1 
+Finished iteration l=124
+Starting iteration l=125
+1 0 3 2 
+Finished iteration l=125
+Starting iteration l=126
+2 1 0 3 
+Finished iteration l=126
+Starting iteration l=127
+3 2 1 0 
+Finished iteration l=127
+Starting iteration l=128
+0 3 2 1 
+Finished iteration l=128
+Starting iteration l=129
+1 0 3 2 
+Finished iteration l=129
+Starting iteration l=130
+2 1 0 3 
+Finished iteration l=130
+Saving values...
+Mean Error a: 4.053439653146475625708935867084133686689484795086624912493783499e-10
+Mean Error F: 1.107492003046426199131064267522202497760532642793453296166567458e-19
+Mean Error G: 5.343669989685198390326440174630523886567168363796258431309570392e-15
+done.
+Starting iteration l=131
+3 2 1 0 
+Finished iteration l=131
+Starting iteration l=132
+0 3 2 1 
+Finished iteration l=132
+Starting iteration l=133
+1 0 3 2 
+Finished iteration l=133
+Starting iteration l=134
+2 1 0 3 
+Finished iteration l=134
+Starting iteration l=135
+3 2 1 0 
+Finished iteration l=135
+Starting iteration l=136
+0 3 2 1 
+Finished iteration l=136
+Starting iteration l=137
+1 0 3 2 
+Finished iteration l=137
+Starting iteration l=138
+2 1 0 3 
+Finished iteration l=138
+Starting iteration l=139
+3 2 1 0 
+Finished iteration l=139
+Starting iteration l=140
+0 3 2 1 
+Finished iteration l=140
+Saving values...
+Mean Error a: 4.708883188114885212925124512970201095341577624378440351897658865e-10
+Mean Error F: 1.494636622922510283937903007905710994333813065976387282083945553e-19
+Mean Error G: 6.696540614294285640421025671079049332055288664059357442449006757e-15
+done.
+Starting iteration l=141
+1 0 3 2 
+Finished iteration l=141
+Starting iteration l=142
+2 1 0 3 
+Finished iteration l=142
+Starting iteration l=143
+3 2 1 0 
+Finished iteration l=143
+Starting iteration l=144
+0 3 2 1 
+Finished iteration l=144
+Starting iteration l=145
+1 0 3 2 
+Finished iteration l=145
+Starting iteration l=146
+2 1 0 3 
+Finished iteration l=146
+Starting iteration l=147
+3 2 1 0 
+Finished iteration l=147
+Starting iteration l=148
+0 3 2 1 
+Finished iteration l=148
+Starting iteration l=149
+1 0 3 2 
+Finished iteration l=149
+Starting iteration l=150
+2 1 0 3 
+Finished iteration l=150
+Saving values...
+Mean Error a: 5.413423612868262644103716546485314570376343914125586738185276994e-10
+Mean Error F: 1.975372220657580117802446972522507409906025155252242487685778569e-19
+Mean Error G: 8.260402210313806791444760817136289644419699760401491730772169862e-15
+done.
+Starting iteration l=151
+3 2 1 0 
+Finished iteration l=151
+Starting iteration l=152
+0 3 2 1 
+Finished iteration l=152
+Starting iteration l=153
+1 0 3 2 
+Finished iteration l=153
+Starting iteration l=154
+2 1 0 3 
+Finished iteration l=154
+Starting iteration l=155
+3 2 1 0 
+Finished iteration l=155
+Starting iteration l=156
+0 3 2 1 
+Finished iteration l=156
+Starting iteration l=157
+1 0 3 2 
+Finished iteration l=157
+Starting iteration l=158
+2 1 0 3 
+Finished iteration l=158
+Starting iteration l=159
+3 2 1 0 
+Finished iteration l=159
+Starting iteration l=160
+0 3 2 1 
+Finished iteration l=160
+Saving values...
+Mean Error a: 6.16706092649264780108238464737097690990656137901876878643328637e-10
+Mean Error F: 2.56368932438275511600077185751667279494228346653862785011077127e-19
+Mean Error G: 1.005054376909822712962496571507691275663059270388394749137555078e-14
+done.
+Starting iteration l=161
+1 0 3 2 
+Finished iteration l=161
+Starting iteration l=162
+2 1 0 3 
+Finished iteration l=162
+Starting iteration l=163
+3 2 1 0 
+Finished iteration l=163
+Starting iteration l=164
+0 3 2 1 
+Finished iteration l=164
+Starting iteration l=165
+1 0 3 2 
+Finished iteration l=165
+Starting iteration l=166
+2 1 0 3 
+Finished iteration l=166
+Starting iteration l=167
+3 2 1 0 
+Finished iteration l=167
+Starting iteration l=168
+0 3 2 1 
+Finished iteration l=168
+Starting iteration l=169
+1 0 3 2 
+Finished iteration l=169
+Starting iteration l=170
+2 1 0 3 
+Finished iteration l=170
+Saving values...
+Mean Error a: 6.96979512801040810263703988218718456936652624282686544193442511e-10
+Mean Error F: 3.274553278150058045965824648923840676959491094865254179981911166e-19
+Mean Error G: 1.208225424911658164051276710899444836523931905302357271529402947e-14
+done.
+Starting iteration l=171
+3 2 1 0 
+Finished iteration l=171
+Starting iteration l=172
+0 3 2 1 
+Finished iteration l=172
+Starting iteration l=173
+1 0 3 2 
+Finished iteration l=173
+Starting iteration l=174
+2 1 0 3 
+Finished iteration l=174
+Starting iteration l=175
+3 2 1 0 
+Finished iteration l=175
+Starting iteration l=176
+0 3 2 1 
+Finished iteration l=176
+Starting iteration l=177
+1 0 3 2 
+Finished iteration l=177
+Starting iteration l=178
+2 1 0 3 
+Finished iteration l=178
+Starting iteration l=179
+3 2 1 0 
+srun: Force Terminated job 12660
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** STEP 12660.0 ON nodeGPU01 CANCELLED AT 2021-09-16T12:47:01 DUE TO TIME LIMIT ***
+srun: error: nodeGPU01: task 0: Terminated
+[1m[7m%[27m[1m[0m                                                                                                                                                                                    k~/pde2/cpu\[0m[27m[24m[J[01;31m➜  [36mcpu[00m [01;34mgit:([31mfaster[34m) [33m✗[00m [K[?1h=[?2004hlls[?1l>[?2004l
+kls\LICENSE  Makefile  [0m[01;34mginac[0m  log300.txt  [01;34mobj[0m  [01;32mpde[0m  result-300.dat  [01;34msrc[0m
+[1m[7m%[27m[1m[0m                                                                                                                                                                                    k~/pde2/cpu\[0m[27m[24m[J[01;32m➜  [36mcpu[00m [01;34mgit:([31mfaster[34m) [33m✗[00m [K[?1h=[?2004hl[?1l>[?2004l
+kl\total 20M
+drwxrwxr-x 6 fquezada fquezada  189 Sep 14 12:47 [0m[01;34m.[0m
+drwxrwxr-x 8 fquezada fquezada 4.0K Sep 14 12:46 [01;34m..[0m
+drwxrwxr-x 2 fquezada fquezada   55 Jul 27 10:50 [01;34m.ipynb_checkpoints[0m
+-rw-rw-r-- 1 fquezada fquezada 1.1K Jul 27 10:50 LICENSE
+-rw-rw-r-- 1 fquezada fquezada  627 Sep  6 14:56 Makefile
+drwxrwxr-x 2 fquezada fquezada  137 Jul 27 10:50 [01;34mginac[0m
+-rw-rw-r-- 1 fquezada fquezada  19K Sep 18 18:32 log300.txt
+drwxrwxr-x 2 fquezada fquezada  161 Sep 12 13:09 [01;34mobj[0m
+-rwxrwxr-x 1 fquezada fquezada 466K Sep 12 13:09 [01;32mpde[0m
+-rw-rw-r-- 1 fquezada fquezada  19M Sep 16 10:32 result-300.dat
+drwxrwxr-x 2 fquezada fquezada  305 Sep  7 16:52 [01;34msrc[0m
+[1m[7m%[27m[1m[0m                                                                                                                                                                                    k~/pde2/cpu\[0m[27m[24m[J[01;32m➜  [36mcpu[00m [01;34mgit:([31mfaster[34m) [33m✗[00m [K[?1h=[?2004hmmv result-300.dat[1m [0m[0m result-300.dat[1m [0m[0m -.dat2.dat[?1l>[?2004l
+kmv\[1m[7m%[27m[1m[0m                                                                                                                                                                                    k~/pde2/cpu\[0m[27m[24m[J[01;32m➜  [36mcpu[00m [01;34mgit:([31mfaster[34m) [33m✗[00m [K[?1h=[?2004hmv result-300.dat result-300-2.dat[1C                              log300.txt[1m [0m[0m log300.txt[1m [0m[0m 
