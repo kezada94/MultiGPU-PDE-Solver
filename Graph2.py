@@ -1,4 +1,3 @@
-from Graph import M
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
@@ -21,9 +20,9 @@ if len(sys.argv) != 5:
     exit()
 
 name = sys.argv[1]
-M = sys.argv[2]
-N = sys.argv[3]
-O = sys.argv[4]
+M = int(sys.argv[2])
+N = int(sys.argv[3])
+O = int(sys.argv[4])
 
 Z = np.genfromtxt(name, delimiter="\n")
 Z = Z.reshape((-1, O, N, M))
