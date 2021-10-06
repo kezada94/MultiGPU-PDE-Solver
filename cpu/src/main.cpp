@@ -67,23 +67,21 @@ void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
 void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L, REAL* a_0){
 	REAL mse = 0;
    
-    double newo = 0;
-    double inc = (O-1)/99.0;
-    #pragma omp parallel for shared(mse, inc) num_threads(48)
-    for (size_t o=0; o<100; o++){
-        double nn = 0;
-        for (size_t n=0; n<N; n=round(nn)){
-            for (size_t m=0; m<M; m++){
-                REAL sum = 0;
-                sum = a_0[m];
-                size_t oo = o*inc;
-                #pragma omp critical
-                mse += (func[I(tp1, oo, n, m)] - sum);
+    
+    #pragma omp parallel for shared(mse) num_threads(48)
+    for (size_t theta=0; theta<N; theta++){
+        for (size_t r=0; r<M; r++){
+            REAL sum = 0;
+            for(size_t i=1; i<10; i++){
+                for (size_t j=1; j<10; j++){
+                    sum += (((1+pow(-1, j+1))*(1+pow(-1, i+1)))/(j*j*j*i*i*i))*sin(j*PI/2*r*dr)*sin(i*PI/3*theta*dtheta)*cos(PI*sqrt(9*j*j+4*i*i)*l*dt)
+                }
             }
-            nn += (double)(N-1)/99.0;
+            #pragma omp critical
+            mse += abs(func[I(tp1, 0, theta, r)] - (576.0/(PI*PI*PI*PI*PI*PI))*sum);
         }
     }
-	mse /= (M*100*100);
+	mse /= (M*N);
     cout << "Mean Error a: " << std::setprecision(64) << mse << endl;
 }
 
@@ -127,8 +125,8 @@ int main(int argc, char *argv[]){
     size_t niter = atoi(argv[8]);
 
 
-    REAL dr = 2*PI/(double)(M-1);
-    REAL dtheta = PI/(double)(N-1);
+    REAL dr = 2/(double)(M-1);
+    REAL dtheta = 3/(double)(N-1);
     REAL dphi = 2*PI/(double)(O-1);
 
     // +2 for ghost points offset
@@ -146,7 +144,7 @@ int main(int argc, char *argv[]){
     REAL *a_0 = new REAL[M];
     int i = 0;
 	fstream file("../alfa(r)-"+to_string(n)+"-"+to_string(q)+"-"+to_string(M)+".csv");
-    if (file.is_open()){
+/*    if (file.is_open()){
         string line;
         while(getline(file, line)){
             a_0[i] = stod(line);
@@ -155,7 +153,7 @@ int main(int argc, char *argv[]){
     } else {
         cout << "Could not open file." << endl;
         exit(-190);
-    }
+    }*/
     cout << "done. " << i << " elements red" << endl;;
     //REAL lambda = 4.0/6.0*(1.0/5.45*129.0)*50.9;
     REAL lambda = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
@@ -174,18 +172,29 @@ int main(int argc, char *argv[]){
     cout << "Filling state 0..."; fflush(stdout);
     fillInitialCondition(a, F, G, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     //if (boundary == 0){
-	    fillDirichletBoundary(a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+	fillDirichletBoundary(a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
     //} else if (boundary == 1){
-	    fillGhostPoints(a, F, G, 0, M, N, O);
+	//fillGhostPoints(a, F, G, 0, M, N, O);
     //} 
     cout << " done." << endl;
     printMSEa(a, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
     //printMSEF(F, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
     //printMSEG(G, 0, 0, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
-    writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
+    //writeTimeSnapshot(filename0, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
     //writeTimeSnapshot(filename1, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
     //writeTimeSnapshot(filename2, a, F, G, 0, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
+
+    cout << "Filling state 1..."; fflush(stdout);
+    computeFirstIteration(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    //if (boundary == 0){
+	fillDirichletBoundary(a, F, G, 1, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
+    //} else if (boundary == 1){
+	//fillGhostPoints(a, F, G, 0, M, N, O);
+    //} 
+    cout << " done." << endl;
+    printMSEa(a, 1, 1, dt, dr, dtheta, dphi, M, N, O, p, 1.0, a_0);
+
 /*
     cout << "Filling state 1..."; fflush(stdout);
     fillInitialCondition(a, F, G, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
@@ -226,7 +235,7 @@ int main(int argc, char *argv[]){
     getchar();
 
 */
-    for (size_t l=1; l<niter; ++l){
+    for (size_t l=2; l<niter; ++l){
         cout << "Starting iteration l=" << l << endl;
         size_t t = l%buffSize;
         size_t tm1 = (l-1)%buffSize;
@@ -239,7 +248,7 @@ int main(int argc, char *argv[]){
         //if (boundary == 0){
             fillDirichletBoundary(a, F, G, l, t, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
         //} else if (boundary == 1){
-            fillGhostPoints(a, F, G, t, M, N, O);
+            //fillGhostPoints(a, F, G, t, M, N, O);
         //} 
 
 

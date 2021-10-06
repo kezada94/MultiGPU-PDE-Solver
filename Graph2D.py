@@ -15,7 +15,7 @@ import pyqtgraph.opengl as gl
 
 import sys
 # In[2]:
-
+"""
 M = sys.argv[1]
 n = sys.argv[2]
 q = sys.argv[3]
@@ -36,15 +36,21 @@ L = Z.shape[0]
 print(Z.shape)
 
 
-l = 0
 data = Z[l, 0]#, 1:-1, 1:-1, 1:-1]
 print(data.shape)
 
-
+"""
 """
 Demonstrates GLVolumeItem for displaying volumetric data.
 
 """
+l = 0
+C = 1290
+k = 315
+d = 19300
+
+ad = k/(C*d)
+print(ad)
 cols = 20
 rows = 20
 x = np.linspace(0, 1, cols)
@@ -69,32 +75,42 @@ w.setWindowTitle('pyqtgraph example: GLVolumeItem')
 g = gl.GLGridItem()
 w.addItem(g)
 
+def u(x, y, t):
+    global ad
+    sum = 0
+    t=t*0.001
+    for n in range(1,10):
+        for m in range(1,10):
+            sum += (((1+(-1)**(m+1))*(1+(-1)**(n+1)))/(m**3*n**3))*np.sin(m*np.pi/2*x)*np.sin(n*np.pi/3*y)*np.cos(np.pi*np.sqrt(9*m**2+4*n**2)*t)
+    return (576/np.pi**6)*sum
 
+x = np.linspace(0, 2, 100)
+y = np.linspace(0, 3, 100)
+
+X, Y = np.meshgrid(x, y)
+#print(u(X, Y, 1))
 import numpy as np
 sp = gl.GLSurfacePlotItem(x=x, y = y, shader='heightColor', computeNormals=False, smooth=False)
-sp2 = gl.GLSurfacePlotItem(x=x, y = y, shader='heightColor', computeNormals=False, smooth=False)
+#sp2 = gl.GLSurfacePlotItem(x=x, y = y, shader='heightColor', computeNormals=False, smooth=False)
 sp.shader()['colorMap'] = np.array([0.2, 2, 0.5, 0.2, 1, 1, 0.2, 0, 2])
 
 w.addItem(sp)
-w.addItem(sp2)
+#w.addItem(sp2)
 
 ax = gl.GLAxisItem()
 w.addItem(ax)
 
 
 def update():
-    global sp, sp2, l, Z, x, y, X, Y, u
+    global sp, l, Z, x, y, X, Y, u
     print(l)
     ## update volume colors
     #data = Z[l, :, :, :]
-    data = Z[l, 0]#, 1:-1, 1:-1, 1:-1]
+    data = u(X,Y,l)#, 1:-1, 1:-1, 1:-1]
     print(data.shape)
     sp.setData(x=x, y = y, z= data)
-    sp2.setData(x=x, y = y, z= u(X,Y,l))
+    #sp2.setData(x=x, y = y, z= u(X,Y,l))
     l = (l+1)
-    if (l == Z.shape[0]):
-        print("REINICIOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!")
-        l=0
 
 
 pop = QtCore.QTimer()
