@@ -20,8 +20,15 @@ using namespace std;
 const REAL PI = 3.14159265358979323846f;
 const size_t buffSize = 4;
 const size_t nfunctions= 3;
+
+
 void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
-	REAL  mse = 0;
+    ofstream file;
+    string filename = "errorG.dat";
+    file.open(filename, std::ofstream::app);
+	REAL mse = 0;
+	REAL mine = 99999999999;
+	REAL maxe = 0;
    
     #pragma omp parallel for shared(mse) num_threads(48)
     for (size_t o=0; o<O; o++){
@@ -31,19 +38,34 @@ void printMSEG(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
             for (size_t m=0; m<M; m=round(mm)){
                 REAL sum = 0;
                 sum = p*(l*dt/L - o*dphi);
+                REAL err = abs(func[I(tp1, o, n, m)] - sum);
                 #pragma omp critical
-                mse += (func[I(tp1, o, n, m)] - sum);
+                mse += err;      
+                if (err>maxe){
+                    maxe=err;
+                }
+                if (err<mine){
+                    mine=err;
+                }
                 mm += (double)(M-1)/99.0;
             }
             nn += (double)(N-1)/99.0;
         }
     }
 	mse /= (O*100*100);
-    cout << "Mean Error G: " << std::setprecision(64) << mse << endl;
+    cout << "Mean Error G: " << std::setprecision(10) << l << " " << mine << " " << maxe << " " << mse << endl;
+    file << std::fixed << std::setprecision(10) << l << " " << mine << " " << maxe << " " << mse << "\n";
+    file.flush();
+    file.close();
 }
 
 void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L){
+    ofstream file;
+    string filename = "errorF.dat";
+    file.open(filename, std::ofstream::app);
 	REAL mse = 0;
+	REAL mine = 99999999999;
+	REAL maxe = 0;
    
     double oo = 0;
     for (size_t o=0; o<O; o=round(oo)){
@@ -53,19 +75,34 @@ void printMSEF(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
             for (size_t m=0; m<M; m=round(mm)){
                 REAL sum = 0;
                 sum = 3.0*(dtheta*n);
+                REAL err = abs(func[I(tp1, o, n, m)] - sum);
                 #pragma omp critical
-                mse += (func[I(tp1, o, n, m)] - sum);
+                mse += err;      
+                if (err>maxe){
+                    maxe=err;
+                }
+                if (err<mine){
+                    mine=err;
+                }
                 mm += (double)(M-1)/99.0;
             }
         }
         oo += (double)(O-1)/99.0;
     }
 	mse /= (N*100*100);
-    cout << "Mean Error F: " << std::setprecision(64) << mse << endl;
+    cout << "Mean Error F: " << std::setprecision(10) << l << " " << mine << " " << maxe << " " << mse << endl;
+    file << std::fixed << std::setprecision(10) << l << " " << mine << " " << maxe << " " << mse << "\n";
+    file.flush();
+    file.close();
 }
 
 void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, REAL dphi, size_t M, size_t N, size_t O, REAL p, REAL L, REAL* a_0){
+    ofstream file;
+    string filename = "errora.dat";
+    file.open(filename, std::ofstream::app);
 	REAL mse = 0;
+	REAL mine = 99999999999;
+	REAL maxe = 0;
    
     double newo = 0;
     double inc = (O-1)/99.0;
@@ -76,15 +113,25 @@ void printMSEa(REAL* func, size_t l, size_t tp1, REAL dt, REAL dr, REAL dtheta, 
             for (size_t m=0; m<M; m++){
                 REAL sum = 0;
                 sum = a_0[m];
-                size_t oo = o*inc;
+                REAL err = abs(func[I(tp1, o, n, m)] - sum);
                 #pragma omp critical
-                mse += (func[I(tp1, oo, n, m)] - sum);
+                mse += err;      
+                if (err>maxe){
+                    maxe=err;
+                }
+                if (err<mine){
+                    mine=err;
+                }
+                size_t oo = o*inc;
             }
             nn += (double)(N-1)/99.0;
         }
     }
 	mse /= (M*100*100);
-    cout << "Mean Error a: " << std::setprecision(64) << mse << endl;
+    cout << "Mean Error a: " << std::setprecision(10) << l << " " << mine << " " << maxe << " " << mse << endl;
+    file << std::fixed << std::setprecision(10) << l << " " << mine << " " << maxe << " " << mse << "\n";
+    file.flush();
+    file.close();
 }
 
 //void writeCheckpoint(ofstream &out, auto a, auto F, auto G, size_t t, size_t M, size_t N, size_t O, size_t l);
@@ -157,8 +204,8 @@ int main(int argc, char *argv[]){
         exit(-190);
     }
     cout << "done. " << i << " elements red" << endl;;
-    //REAL lambda = 4.0/6.0*(1.0/5.45*129.0)*50.9;
-    REAL lambda = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
+    REAL lambda = 4.0/6.0*(1.0/5.45*129.0)*50.9;
+    //REAL lambda = 1.0; //4.0/6.0*(1.0/5.45*129.0)*50.9;
     //REAL lambda = 4.0/6.0*(1.0/E*186.0)*50.9;
 
     REAL l_1 = 1.f;
@@ -204,7 +251,6 @@ int main(int argc, char *argv[]){
     //writeTimeSnapshot(filename1, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
     //writeTimeSnapshot(filename2, a, F, G, 1, 0, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
-    getchar();
 
     cout << "Filling state 2..."; fflush(stdout);
     fillInitialCondition(a, F, G, 2, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, p, q, 1, a_0);
@@ -223,7 +269,6 @@ int main(int argc, char *argv[]){
     //writeTimeSnapshot(filename1, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
     //writeTimeSnapshot(filename2, a, F, G, 2, 1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
     cout << "Written" << endl;
-    getchar();
 
 
     for (size_t l=3; l<niter; ++l){
@@ -253,7 +298,7 @@ int main(int argc, char *argv[]){
             printMSEF(F, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
             printMSEG(G, l, t, dt, dr, dtheta, dphi, M, N, O, p, 1.0);
 
-            writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 3);
+            //writeTimeSnapshot(filename, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 3);
             //writeTimeSnapshot(filename0, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 0);
             //writeTimeSnapshot(filename1, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 1);
             //writeTimeSnapshot(filename2, a, F, G, t, tm1, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lambda, 2);
@@ -317,8 +362,8 @@ REAL getT00(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, size_t r, size_t th
     MatrixXcd L_1 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r-1, theta, phi, M, N, O))/(double)(dr)); 
     MatrixXcd L_2 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta-1, phi, M, N, O))/(double)(dtheta));
     MatrixXcd L_3 = Um1*((getU(a, F, G, t, r, theta, phi, M, N, O) - getU(a, F, G, t, r, theta, phi-1, M, N, O))/(double)(dphi)); 
-    //REAL K = 4970.25;
-    double K = 2.0;
+    REAL K = 4970.25;
+    //double K = 2.0;
     complex<double> cons = -K/2.0f;
     REAL t00 = ((cons)*(L_0*L_0 - 1.0/2.0*-1.0*(L_0*L_0 + L_1*L_1 +L_2*L_2 +L_3*L_3)//).trace()).real();
                         +((double)lambda)/4.0*(getF(L_0, L_1)*getF(L_0, L_1)

@@ -31,7 +31,7 @@ void fillGhostPoints(REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, si
 	// top
 	#pragma omp parallel for schedule(dynamic) num_threads(64)
 	for(size_t r=0; r<M+2; r++){
-		for(size_t phi=0; phi<N+2; phi++){
+		for(size_t phi=0; phi<O+2; phi++){
 			a[E(t, phi, 0, r)] = a[E(t, phi, 2, r)];
 			F[E(t, phi, 0, r)] = F[E(t, phi, 2, r)];
 			G[E(t, phi, 0, r)] = G[E(t, phi, 2, r)];
@@ -41,7 +41,7 @@ void fillGhostPoints(REAL* a, REAL* F, REAL *G, size_t t, size_t M, size_t N, si
 	// bottom
 	#pragma omp parallel for schedule(dynamic) num_threads(64)
 	for(size_t r=0; r<M+2; r++){
-		for(size_t phi=0; phi<N+2; phi++){
+		for(size_t phi=0; phi<O+2; phi++){
 			a[E(t, phi, N+1, r)] = a[E(t, phi, N-1, r)];
 			F[E(t, phi, N+1, r)] = F[E(t, phi, N-1, r)];
 			G[E(t, phi, N+1, r)] = G[E(t, phi, N-1, r)];
@@ -195,9 +195,9 @@ void fillTemporalGhostVolume(REAL* a, REAL* F, REAL *G, size_t t, size_t tm1, si
 
 void computeNextIteration(REAL* a, REAL* F, REAL *G, size_t l, size_t t, size_t tm1, size_t tm2, size_t tm3, size_t M, size_t N, size_t O, REAL dt, REAL dr, REAL dtheta, REAL dphi, REAL l_1, REAL l_2, REAL lamb, int p, int q, int L, REAL* a_0){
 	#pragma omp parallel for schedule(dynamic) num_threads(64)
-	for(size_t phi=0; phi<M; phi++){
+	for(size_t phi=0; phi<O; phi++){
 		for(size_t theta=0; theta<N; theta++){
-			for(size_t r=0; r<O; r++){
+			for(size_t r=0; r<M; r++){
 				a[I(t, phi, theta, r)] = computeNexta(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
 				F[I(t, phi, theta, r)] = computeNextF(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);
 				G[I(t, phi, theta, r)] = computeNextG(a, F, G, tm1, tm2, tm3, r, theta, phi, M, N, O, dt, dr, dtheta, dphi, l_1, l_2, lamb, p, q, L);

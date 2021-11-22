@@ -26,7 +26,7 @@ using namespace boost::multiprecision;
 #define PI_5 (E5*sin(dr*r)*sin(dtheta*theta)*sin(dphi*phi))
 #define PI_6 (E6*sin(dr*r)*sin(dtheta*theta)*sin(dphi*phi))
 
-typedef cpp_dec_float_50 REAL;
+//typedef cpp_dec_float_50 REAL;
 //typedef float128 REAL;
-//typedef long double REAL;
+typedef long double REAL;
 //typedef double REAL;
